@@ -28,7 +28,10 @@ fn main() {
 
     let res = match pattern.as_str() {
         r"\d" => input_line.chars().into_iter().any(|e| e.is_digit(10)),
-        r"\w" => input_line.chars().into_iter().any(|e| e.is_alphanumeric()),
+        r"\w" => input_line
+            .chars()
+            .into_iter()
+            .any(|e| e.is_alphanumeric() || e == '_'),
         _ => match_pattern(&input_line, &pattern),
     };
 
@@ -36,6 +39,7 @@ fn main() {
         eprintln!("SUCCESS");
         process::exit(0)
     } else {
+        eprintln!("FAILED");
         process::exit(1)
     }
 }
