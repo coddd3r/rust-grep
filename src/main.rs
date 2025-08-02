@@ -12,9 +12,10 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
 
 // Usage: echo <input_text> | your_program.sh -E <pattern>
 fn main() {
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
     eprintln!("Logs from your program will appear here!");
 
+    let all_args = env::args();
+    eprintln!("args:{:?}", all_args);
     if env::args().nth(1).unwrap() != "-E" {
         println!("Expected first argument to be '-E'");
         process::exit(1);
@@ -25,7 +26,13 @@ fn main() {
 
     io::stdin().read_line(&mut input_line).unwrap();
 
-    if match_pattern(&input_line, &pattern) {
+    let res = match pattern.as_str() {
+        r"\d" => input_line.chars().into_iter().any(|e| e.is_digit(10)),
+        _ => match_pattern(&input_line, &pattern),
+    };
+
+    if res {
+        eprintln!("SUCCESS");
         process::exit(0)
     } else {
         process::exit(1)
