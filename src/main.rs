@@ -46,7 +46,7 @@ fn main() {
         if pattern.chars().nth(0).unwrap() == '[' && pat_chars.clone().last().unwrap() == ']' {
             eprintln!("FOUND char group");
 
-            let lett_group = patt_letters[2..patt_letters.len() - 1];
+            let lett_group = &patt_letters[2..patt_letters.len() - 1];
             pattern.len() > 2 && {
                 if patt_letters[1] != '^' {
                     input_line
