@@ -25,6 +25,18 @@ fn main() {
     let mut input_line = String::new();
 
     io::stdin().read_line(&mut input_line).unwrap();
+    let letters: Vec<char> = pattern.chars().collect();
+    let pat_chars = pattern.chars();
+    if pattern.chars().nth(0).unwrap() == '[' && pat_chars.clone().last().unwrap() == ']' {
+        if input_line
+            .chars()
+            .into_iter()
+            .any(|c| letters.iter().any(|d| &c == d))
+        {
+            eprintln!("SUCCESS");
+            process::exit(0)
+        }
+    }
 
     let res = match pattern.as_str() {
         r"\d" => input_line.chars().into_iter().any(|e| e.is_digit(10)),
