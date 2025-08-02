@@ -25,16 +25,20 @@ fn main() {
     let mut input_line = String::new();
 
     io::stdin().read_line(&mut input_line).unwrap();
-    let letters: Vec<char> = pattern.chars().collect();
+    let patt_letters: Vec<char> = pattern.chars().collect();
     let pat_chars = pattern.chars();
     if pattern.chars().nth(0).unwrap() == '[' && pat_chars.clone().last().unwrap() == ']' {
+        eprintln!("FOUND char group");
         if input_line
             .chars()
             .into_iter()
-            .any(|c| letters.iter().any(|d| &c == d))
+            .any(|c| patt_letters.iter().any(|d| &c == d))
         {
-            eprintln!("SUCCESS");
+            eprintln!("char group SUCCESS");
             process::exit(0)
+        } else {
+            eprintln!("char group FAILED");
+            process::exit(1)
         }
     }
 
