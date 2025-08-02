@@ -29,11 +29,11 @@ fn main() {
     let pat_chars = pattern.chars();
     if pattern.chars().nth(0).unwrap() == '[' && pat_chars.clone().last().unwrap() == ']' {
         eprintln!("FOUND char group");
-        if input_line
-            .chars()
-            .into_iter()
-            .any(|c| patt_letters.iter().any(|d| &c == d))
-        {
+        if input_line.chars().into_iter().any(|c| {
+            patt_letters[1..patt_letters.len() - 1]
+                .iter()
+                .any(|d| &c == d)
+        }) {
             eprintln!("char group SUCCESS");
             process::exit(0)
         } else {
@@ -42,13 +42,25 @@ fn main() {
         }
     }
 
-    let res = match pattern.as_str() {
-        r"\d" => input_line.chars().into_iter().any(|e| e.is_digit(10)),
-        r"\w" => input_line
-            .chars()
-            .into_iter()
-            .any(|e| e.is_alphanumeric() || e == '_'),
-        _ => match_pattern(&input_line, &pattern),
+    let res = {
+        if pattern.chars().nth(0).unwrap() == '[' && pat_chars.clone().last().unwrap() == ']' {
+            eprintln!("FOUND char group");
+            pattern.len() > 2
+                && input_line.chars().into_iter().any(|c| {
+                    patt_letters[1..patt_letters.len() - 1]
+                        .iter()
+                        .any(|d| &c == d)
+                })
+        } else {
+            match pattern.as_str() {
+                r"\d" => input_line.chars().into_iter().any(|e| e.is_digit(10)),
+                r"\w" => input_line
+                    .chars()
+                    .into_iter()
+                    .any(|e| e.is_alphanumeric() || e == '_'),
+                _ => match_pattern(&input_line, &pattern),
+            }
+        }
     };
 
     if res {
