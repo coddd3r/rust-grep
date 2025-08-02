@@ -28,6 +28,7 @@ fn main() {
 
     let res = match pattern.as_str() {
         r"\d" => input_line.chars().into_iter().any(|e| e.is_digit(10)),
+        r"\w" => input_line.chars().into_iter().any(|e| e.is_alphanumeric()),
         _ => match_pattern(&input_line, &pattern),
     };
 
