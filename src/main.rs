@@ -178,7 +178,6 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 input_index += found_pos + 1;
                 eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
             } else if &pattern[patt_index..patt_index + 1] == r"+" {
-                eprintln!("CHECKING MULTIPLE");
                 let mut similar_remaining_in_pattern = 0;
 
                 let mut check_index = patt_index;
