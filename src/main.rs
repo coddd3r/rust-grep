@@ -100,26 +100,41 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     .position(|c| c == &']')
                     .unwrap();
 
-                let char_group_length = char_group_end - patt_index - 1;
+                let char_group_length = char_group_end - patt_index;
                 let lett_group = &patt_chars[patt_index + 1..patt_index + char_group_length];
+                let mut found_pos = 0;
+                eprintln!(
+                    "checking char group of length:{char_group_length}, group:{:?}",
+                    &patt_chars[patt_index + 1..patt_index + char_group_end + 1]
+                );
 
                 if !(char_group_length > 1 && {
                     if patt_chars[patt_index + 1] != '^' {
-                        input_chars[input_index..input_index + char_group_length]
-                            .iter()
-                            .any(|c| lett_group.contains(&c))
+                        input_chars[input_index..].iter().enumerate().any(|(i, c)| {
+                            if lett_group.contains(&c) {
+                                found_pos = i;
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        })
                     } else {
                         eprintln!("checking negative group");
-
-                        input_line
-                            .chars()
-                            .into_iter()
-                            .any(|c| !lett_group.contains(&c))
+                        patt_index += 1;
+                        input_chars[input_index..].iter().enumerate().any(|(i, c)| {
+                            if !lett_group.contains(&c) {
+                                found_pos = i;
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        })
                     }
                 }) {
                     return false;
                 }
-                patt_index = char_group_end;
+                patt_index += char_group_length + 2;
+                input_index += found_pos + 1;
             } else if &pattern[patt_index..patt_index + 1] == r"\" {
                 while &pattern[patt_index + 1..patt_index + 2] == r"\" {
                     patt_index += 1;
