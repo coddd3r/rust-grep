@@ -216,6 +216,28 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     //return false;
                     continue;
                 }
+                '(' => {
+                    if patt_chars[patt_index + 1..].contains(&')') {
+                        let capture_group_end = patt_chars[patt_index + 1..]
+                            .iter()
+                            .position(|c| c == &')')
+                            .unwrap();
+
+                        let capt_group_length = capture_group_end - patt_index;
+
+                        let capt_group = patt_chars
+                            [patt_index + 1..patt_index + capture_group_end + 1]
+                            .into_iter()
+                            .collect::<String>();
+                        if !capt_group
+                            .split('|')
+                            .any(|e| match_by_char(&input_line[input_index..], e))
+                        {
+                            return false;
+                        }
+                        patt_index += capt_group_length + 2;
+                    }
+                }
                 _ => {
                     prev_pattern = patt_chars[patt_index..patt_index + 1]
                         .into_iter()

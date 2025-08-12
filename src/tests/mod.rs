@@ -50,3 +50,8 @@ fn check_qty_wildcard() {
 fn failed_before_tester() {
     assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws"));
 }
+
+#[test]
+fn match_multiple_patterns() {
+    assert!(match_by_char("cat", "(cat|dog)"))
+}
