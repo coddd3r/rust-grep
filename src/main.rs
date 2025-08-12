@@ -101,11 +101,11 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     .unwrap();
 
                 let char_group_length = char_group_end - patt_index;
-                let lett_group = &patt_chars[patt_index + 1..patt_index + char_group_length];
+                let lett_group = &patt_chars[patt_index + 1..patt_index + char_group_end + 1];
                 let mut found_pos = 0;
                 eprintln!(
                     "checking char group of length:{char_group_length}, group:{:?}",
-                    &patt_chars[patt_index + 1..patt_index + char_group_end + 1]
+                    lett_group
                 );
 
                 if !(char_group_length > 1 && {
@@ -120,9 +120,10 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         })
                     } else {
                         eprintln!("checking negative group");
+                        let neg_group = &lett_group[1..];
                         patt_index += 1;
                         input_chars[input_index..].iter().enumerate().any(|(i, c)| {
-                            if !lett_group.contains(&c) {
+                            if !neg_group.contains(&c) {
                                 found_pos = i;
                                 return true;
                             } else {
