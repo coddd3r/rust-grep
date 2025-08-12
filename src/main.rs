@@ -121,6 +121,9 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 }
                 patt_index = char_group_end;
             } else if &pattern[patt_index..patt_index + 1] == r"\" {
+                while &pattern[patt_index + 1..patt_index + 2] == r"\" {
+                    patt_index += 1;
+                }
                 let char_class = &pattern[patt_index..patt_index + 2];
                 eprintln!("checking char class {}", char_class);
                 let curr_remaining = &input_line[input_index..];
