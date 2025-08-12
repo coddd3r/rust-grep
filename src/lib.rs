@@ -34,9 +34,11 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                             "checking char group of length:{char_group_length}, group:{:?}",
                             lett_group
                         );
+
                         let optional_position = patt_index + char_group_end + 2;
                         let is_optional =
                             optional_position < patt_len && patt_chars[optional_position] == '?';
+
                         let res = char_group_length > 1 && {
                             if patt_chars[patt_index + 1] != '^' {
                                 input_chars[input_index..].iter().enumerate().any(|(i, c)| {
@@ -162,6 +164,21 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?';
                     let res = patt_chars[patt_index] == input_chars[input_index];
                     eprintln!("optional char?{is_optional}");
+                    let mut next_optional = false;
+                    if patt_len - patt_index > 2 {
+                        let patt_to_check = &pattern[patt_index + 1..];
+                        next_optional = check_optional(patt_to_check);
+                        eprintln!(
+                            "Patt to check: {patt_to_check}, checking next with next optional?{}",
+                            next_optional
+                        );
+                    }
+
+                    //if char is not found but the next part of the pattern is optional
+                    if !res && !is_optional && next_optional {
+                        input_index += 1;
+                        continue;
+                    }
                     if !res && !is_optional {
                         eprintln!(
                         "returning false in char char mapping, curr patter pos:{patt_index}, input pos:{input_index}"
@@ -217,6 +234,10 @@ fn check_optional(pattern: &str) -> bool {
             eprintln!("checking char class {}", char_class);
             patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?'
         }
-        _ => patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?',
+        _ => {
+            let opt_position = patt_chars[patt_index + 1];
+            eprintln!("opt position:{opt_position}");
+            patt_index + 1 < patt_len && opt_position == '?'
+        }
     }
 }
