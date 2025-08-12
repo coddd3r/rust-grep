@@ -42,6 +42,11 @@ fn check_wildcard() {
 }
 
 #[test]
+fn check_qty_wildcard() {
+    assert!(match_by_char("goøö0Ogol", "g.+gol"));
+}
+
+#[test]
 fn failed_before_tester() {
     assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws"));
 }

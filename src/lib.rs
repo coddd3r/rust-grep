@@ -7,7 +7,7 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
     let mut input_index = 0;
     let patt_len = pattern.len();
     let input_len = input_line.len();
-    let mut prev_pattern = "";
+    let mut prev_pattern = String::new();
 
     if patt_chars[0] == '^' {
         patt_index += 1
@@ -28,7 +28,9 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         let char_group_length = char_group_end - patt_index;
                         let lett_group =
                             &patt_chars[patt_index + 1..patt_index + char_group_end + 1];
-                        prev_pattern = &pattern[patt_index..patt_index + char_group_end + 2];
+                        prev_pattern = patt_chars[patt_index..patt_index + char_group_end + 2]
+                            .into_iter()
+                            .collect::<String>();
                         let mut found_pos = 0;
                         eprintln!(
                             "checking char group of length:{char_group_length}, group:{:?}",
@@ -82,17 +84,19 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     }
                 }
                 '\\' => {
-                    while &pattern[patt_index + 1..patt_index + 2] == r"\" {
+                    while patt_chars[patt_index + 1] == '\\' {
                         patt_index += 1;
                     }
-                    let char_class = &pattern[patt_index..patt_index + 2];
-                    prev_pattern = char_class;
+                    let char_class = patt_chars[patt_index..patt_index + 2]
+                        .into_iter()
+                        .collect::<String>();
+                    prev_pattern = char_class.clone();
                     eprintln!("checking char class {}", char_class);
                     let curr_remaining = &input_line[input_index..];
                     let mut found_pos = 0;
                     let is_optional =
                         patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?';
-                    let res = match char_class {
+                    let res = match char_class.as_str() {
                         r"\d" => curr_remaining.chars().enumerate().any(|(i, e)| {
                             if e.is_digit(10) {
                                 found_pos = i;
@@ -108,13 +112,13 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                                 return false;
                             }
                         }),
-                        // _ => match_pattern(&curr_remaining, &pattern[patt_index..]),
                         _ => unreachable!(),
                     };
                     if !res && !is_optional {
                         let mut next_optional = false;
                         if patt_len - patt_index > 2 {
-                            let patt_to_check = &pattern[patt_index + 1..];
+                            let patt_to_check =
+                                &patt_chars[patt_index + 1..].into_iter().collect::<String>();
                             next_optional = check_optional(patt_to_check);
                             eprintln!(
                             "Patt to check: {patt_to_check}, checking next with next optional?{}",
@@ -146,7 +150,10 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     let mut check_index = patt_index + 1;
                     let prev_pattern_len = prev_pattern.len();
                     while check_index < patt_len
-                        && &pattern[check_index..check_index + prev_pattern_len] == prev_pattern
+                        && patt_chars[check_index..check_index + prev_pattern_len]
+                            .into_iter()
+                            .collect::<String>()
+                            == prev_pattern
                     {
                         eprintln!("checking one");
                         check_index += prev_pattern_len;
@@ -154,7 +161,7 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     }
                     let mut num_repeats = 0;
                     while input_index < input_len
-                        && match_by_char(&input_line[input_index..input_index + 1], prev_pattern)
+                        && match_by_char(&input_line[input_index..input_index + 1], &prev_pattern)
                     {
                         eprintln!("in loop");
                         input_index += 1;
@@ -174,20 +181,45 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 }
 
                 '.' => {
-                    let next_patt = get_next_pattern(&pattern[patt_index + 1..]);
+                    let mut remaining_patt =
+                        patt_chars[patt_index + 1..].into_iter().collect::<String>();
+
+                    let mut next_patt = get_next_pattern(&remaining_patt);
                     eprintln!("next patt:{}", next_patt);
+                    let mut one_or_more = false;
+                    //let mut any_or_more = false;
+                    if ["+", "*"].contains(&next_patt) {
+                        one_or_more = next_patt == "+";
+                        //any_or_more = next_patt == "*";
+                        patt_index += 1;
+                        remaining_patt =
+                            patt_chars[patt_index + 1..].into_iter().collect::<String>();
+                        next_patt = get_next_pattern(&remaining_patt);
+                    }
+                    let mut num_wild_matches = 0;
                     while input_index < input_len
-                        && !match_by_char(&input_line[input_index..input_index + 1], next_patt)
+                        && !match_by_char(
+                            &input_chars[input_index..input_index + 1]
+                                .into_iter()
+                                .collect::<String>(),
+                            next_patt,
+                        )
                     {
                         input_index += next_patt.len();
+                        num_wild_matches += 1;
                     }
 
+                    if num_wild_matches == 0 && one_or_more {
+                        return false;
+                    }
                     patt_index += 1;
                     //return false;
                     continue;
                 }
                 _ => {
-                    prev_pattern = &pattern[patt_index..patt_index + 1];
+                    prev_pattern = patt_chars[patt_index..patt_index + 1]
+                        .into_iter()
+                        .collect::<String>();
                     let is_optional =
                         patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?';
                     let res = patt_chars[patt_index] == input_chars[input_index];
@@ -198,10 +230,11 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         let mut next_optional = false;
                         //if the next part of the pattern is optional
                         if patt_len - patt_index > 2 {
-                            let patt_to_check = &pattern[patt_index + 1..];
-                            next_optional = check_optional(patt_to_check);
+                            let remaining_patt =
+                                patt_chars[patt_index + 1..].into_iter().collect::<String>();
+                            next_optional = check_optional(&remaining_patt);
                             eprintln!(
-                            "Patt to check: {patt_to_check}, checking next with next optional?{}",
+                            "Patt to check: {remaining_patt}, checking next with next optional?{}",
                             next_optional
                         );
                         }
@@ -234,10 +267,14 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
         //pattern fully parsed
         //OR pattern is optional/end marker
         //OR the remaining pattern is optional
+
         return patt_index >= pattern.len()
             || ((patt_index == pattern.len() - 1)
                 && ['$', '?', '.'].contains(&patt_chars[patt_index]))
-            || (patt_len - patt_index > 1 && check_optional(&pattern[patt_index..]));
+            || patt_len - patt_index > 1 && {
+                let remaining_patt = patt_chars[patt_index..].into_iter().collect::<String>();
+                check_optional(&remaining_patt)
+            };
     };
     true
 }
@@ -261,10 +298,12 @@ fn check_optional(pattern: &str) -> bool {
             }
         }
         '\\' => {
-            while &pattern[patt_index + 1..patt_index + 2] == r"\" {
+            while &patt_chars[patt_index + 1] == &'\\' {
                 patt_index += 1;
             }
-            let char_class = &pattern[patt_index..patt_index + 2];
+            let char_class = &patt_chars[patt_index..patt_index + 2]
+                .into_iter()
+                .collect::<String>();
             eprintln!("checking char class {}", char_class);
             patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?'
         }
