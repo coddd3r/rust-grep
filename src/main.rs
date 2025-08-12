@@ -179,13 +179,23 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
             } else if &pattern[patt_index..patt_index + 1] == r"+" {
                 eprintln!("CHECKING MULTIPLE");
+                let mut similar_remaining_in_pattern = 0;
+
+                let mut check_index = patt_index;
+                let prev_pattern_len = prev_pattern.len();
+                while &pattern[check_index + 1..patt_index + prev_pattern_len] == prev_pattern {
+                    check_index += prev_pattern_len;
+                    similar_remaining_in_pattern += 1;
+                }
+                let mut num_repeats = 0;
                 while input_index < input_len
                     && match_by_char(&input_line[input_index..input_index + 1], prev_pattern)
                 {
                     eprintln!("in loop");
                     input_index += 1;
+                    num_repeats += 1;
                 }
-                patt_index += 1;
+                patt_index += (num_repeats - similar_remaining_in_pattern) * prev_pattern_len;
             } else {
                 prev_pattern = &pattern[patt_index..patt_index + 1];
                 if &pattern[patt_index..patt_index + 1] != &input_line[input_index..input_index + 1]
