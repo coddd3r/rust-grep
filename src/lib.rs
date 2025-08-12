@@ -230,10 +230,26 @@ pub fn match_by_char(
                 }
                 '(' => {
                     if patt_chars[patt_index + 1..].contains(&')') {
-                        let capture_group_end = patt_chars[patt_index + 1..]
-                            .iter()
-                            .position(|c| c == &')')
-                            .unwrap();
+                        // let capture_group_end = patt_chars[patt_index + 1..]
+                        //     .iter()
+                        //     .position(|c| c == &')')
+                        //     .unwrap();
+
+                        let mut num_opening: usize = 1;
+                        let mut capture_group_end = 0;
+                        let rem_chars = &patt_chars[patt_index + 1..];
+                        for (i, e) in rem_chars.iter().enumerate() {
+                            if e == &'(' {
+                                num_opening += 1
+                            }
+                            if e == &')' && num_opening == 1 {
+                                capture_group_end = i;
+                                break;
+                            }
+                            if e == &')' && num_opening > 1 {
+                                num_opening -= 1;
+                            }
+                        }
 
                         let capt_group = patt_chars
                             [patt_index + 1..patt_index + capture_group_end + 1]
@@ -241,20 +257,56 @@ pub fn match_by_char(
                             .collect::<String>();
                         let mut matched_input_len = 0;
                         eprintln!(" input index:{input_index}, patt_index:{patt_index},capt group:{capt_group}");
-                        if !capt_group.split('|').any(|e| {
-                            let res = match_by_char(&input_line[input_index..], e, true);
-                            if res.0 {
-                                matched_input_len = res.1.unwrap();
+                        let split_char = {
+                            if capt_group.contains('(') {
+                                eprintln!("splitting by )");
+                                '('
+                            } else {
+                                '|'
                             }
-                            res.0
-                        }) {
-                            return (false, None);
+                        };
+                        if split_char == '(' {
+                            eprintln!("in layers groups");
+                            let mut split_groups = capt_group.split(split_char);
+                            if !split_groups.all(|e| {
+                                eprintln!("matching GROUP:{e}");
+                                let res = e.split(')').all(|gr| {
+                                    eprintln!("matching SUBGROUP:{gr}");
+                                    let use_patt = format!("({gr})");
+                                    let group_res =
+                                        match_by_char(&input_line[input_index..], &use_patt, true);
+
+                                    if group_res.0 {
+                                        input_index += group_res.1.unwrap();
+                                        matched_input_len = group_res.1.unwrap();
+                                    }
+                                    group_res.0
+                                });
+                                res
+                            }) {
+                                eprintln!("\n\ngroups matching false\n\n");
+                                return (false, None);
+                            }
+                        } else {
+                            let mut split_groups = capt_group.split(split_char);
+
+                            if !split_groups.any(|e| {
+                                eprintln!("matching GROUP:{e}");
+                                let res = match_by_char(&input_line[input_index..], e, true);
+                                if res.0 {
+                                    matched_input_len = res.1.unwrap();
+                                }
+                                res.0
+                            }) {
+                                eprintln!("\n\ngroups matching false\n\n");
+                                return (false, None);
+                            }
+                            patt_index += capt_group.len() + 2;
+                            input_index += matched_input_len;
+                            eprintln!(
+                                "AFTER MULTIPLE input index:{input_index}, patt_index:{patt_index}"
+                            );
                         }
-                        patt_index += capt_group.len() + 2;
-                        input_index += matched_input_len;
-                        eprintln!(
-                            "AFTER MULTIPLE input index:{input_index}, patt_index:{patt_index}"
-                        );
                     }
                 }
                 _ => {
