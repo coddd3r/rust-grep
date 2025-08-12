@@ -2,14 +2,6 @@ use std::env;
 use std::io;
 use std::process;
 
-fn match_pattern(input_line: &str, pattern: &str) -> bool {
-    if pattern.chars().count() == 1 {
-        return input_line.contains(pattern);
-    } else {
-        panic!("Unhandled pattern: {}", pattern)
-    }
-}
-
 // Usage: echo <input_text> | your_program.sh -E <pattern>
 fn main() {
     eprintln!("Logs from your program will appear here!");
@@ -129,20 +121,49 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 }
                 patt_index = char_group_end;
             } else if &pattern[patt_index..patt_index + 1] == r"\" {
+                let char_class = &pattern[patt_index..patt_index + 2];
+                eprintln!("checking char class {}", char_class);
                 let curr_remaining = &input_line[input_index..];
-                if !(match &pattern[patt_index..patt_index + 2] {
-                    r"\d" => curr_remaining.chars().into_iter().any(|e| e.is_digit(10)),
-                    r"\w" => curr_remaining
-                        .chars()
-                        .into_iter()
-                        .any(|e| e.is_alphanumeric() || e == '_'),
-                    _ => match_pattern(&curr_remaining, &pattern[patt_index..]),
+                let mut found_pos = 0;
+                if !(match char_class {
+                    r"\d" => curr_remaining.chars().enumerate().any(|(i, e)| {
+                        if e.is_digit(10) {
+                            found_pos = i;
+                            return true;
+                        }
+                        return false;
+                    }),
+                    r"\w" => curr_remaining.chars().enumerate().any(|(i, e)| {
+                        if e.is_alphanumeric() || e == '_' {
+                            found_pos = i;
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }),
+                    // _ => match_pattern(&curr_remaining, &pattern[patt_index..]),
+                    _ => unreachable!(),
                 }) {
+                    eprintln!(
+                        "returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}"
+                    );
                     return false;
                 }
+                patt_index += 2;
+                input_index += found_pos + 1;
+                eprintln!("found a digit, new pos{found_pos}, new patt pos{patt_index}");
+            } else {
+                if &pattern[patt_index..patt_index + 1] != &input_line[input_index..input_index + 1]
+                {
+                    eprintln!(
+                        "returning false in char char mapping, curr patter pos:{patt_index}, input pos:{input_index}"
+                    );
+                    return false;
+                }
+
+                patt_index += 1;
+                input_index += 1;
             }
-            patt_index += 1;
-            input_index += 1;
         }
     }
     true
