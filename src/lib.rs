@@ -112,10 +112,24 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         _ => unreachable!(),
                     };
                     if !res && !is_optional {
-                        eprintln!(
+                        let mut next_optional = false;
+                        if patt_len - patt_index > 2 {
+                            let patt_to_check = &pattern[patt_index + 1..];
+                            next_optional = check_optional(patt_to_check);
+                            eprintln!(
+                            "Patt to check: {patt_to_check}, checking next with next optional?{}",
+                            next_optional
+                        );
+                        }
+                        if next_optional {
+                            input_index += 1;
+                            continue;
+                        } else {
+                            eprintln!(
                         "returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}"
                     );
-                        return false;
+                            return false;
+                        }
                     }
                     patt_index += 2;
                     if res {
@@ -164,26 +178,28 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?';
                     let res = patt_chars[patt_index] == input_chars[input_index];
                     eprintln!("optional char?{is_optional}");
-                    let mut next_optional = false;
-                    if patt_len - patt_index > 2 {
-                        let patt_to_check = &pattern[patt_index + 1..];
-                        next_optional = check_optional(patt_to_check);
-                        eprintln!(
+
+                    //if char is not found but the next part of the pattern is optional
+                    if !res && !is_optional {
+                        let mut next_optional = false;
+                        //if the next part of the pattern is optional
+                        if patt_len - patt_index > 2 {
+                            let patt_to_check = &pattern[patt_index + 1..];
+                            next_optional = check_optional(patt_to_check);
+                            eprintln!(
                             "Patt to check: {patt_to_check}, checking next with next optional?{}",
                             next_optional
                         );
-                    }
-
-                    //if char is not found but the next part of the pattern is optional
-                    if !res && !is_optional && next_optional {
-                        input_index += 1;
-                        continue;
-                    }
-                    if !res && !is_optional {
-                        eprintln!(
+                        }
+                        if next_optional {
+                            input_index += 1;
+                            continue;
+                        } else {
+                            eprintln!(
                         "returning false in char char mapping, curr patter pos:{patt_index}, input pos:{input_index}"
                     );
-                        return false;
+                            return false;
+                        }
                     }
                     if res {
                         input_index += 1;
@@ -201,9 +217,12 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
     // if input fully parsed but pattern not exhausted
     if input_index == input_chars.len() {
         eprintln!("final return: input i:{input_index}, patt i:{patt_index}");
+        //pattern fully parsed
+        //OR pattern is optional/end marker
+        //OR the remaining pattern is optional
         return patt_index >= pattern.len()
             || (patt_index == pattern.len() - 1) && ['$', '?'].contains(&patt_chars[patt_index])
-            || check_optional(&pattern[patt_index..]);
+            || (patt_len - patt_index > 1 && check_optional(&pattern[patt_index..]));
     };
     true
 }

@@ -22,3 +22,14 @@ fn cc_optional() {
     assert!(match_by_char("act", "a?ca?a?t"));
     assert!(match_by_char("ct", "a?ca?a?t"));
 }
+
+#[test]
+fn check_optional_type() {
+    assert!(match_by_char("act", r"c\d?t"));
+    assert!(match_by_char("act", r"c\d?t\d?"));
+}
+
+#[test]
+fn failed_before_tester() {
+    assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws"));
+}
