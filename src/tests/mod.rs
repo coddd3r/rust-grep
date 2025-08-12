@@ -30,6 +30,18 @@ fn check_optional_type() {
 }
 
 #[test]
+fn check_wildcard() {
+    assert!(match_by_char("dog", r"d.g"));
+    assert!(match_by_char("2", r".[^abc]"));
+    assert!(match_by_char("2", r".[abc]"));
+    assert!(match_by_char("2", r".\d"));
+    assert!(match_by_char("dog", r"d.g."));
+    assert!(match_by_char("dog", r".d.g."));
+    assert!(!match_by_char("dog", r".c.g."));
+    assert!(!match_by_char("cog", r"d.g"));
+}
+
+#[test]
 fn failed_before_tester() {
     assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws"));
 }

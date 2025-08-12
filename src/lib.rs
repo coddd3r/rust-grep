@@ -172,6 +172,20 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         eprintln!("new pattern index,{patt_index}")
                     }
                 }
+
+                '.' => {
+                    let next_patt = get_next_pattern(&pattern[patt_index + 1..]);
+                    eprintln!("next patt:{}", next_patt);
+                    while input_index < input_len
+                        && !match_by_char(&input_line[input_index..input_index + 1], next_patt)
+                    {
+                        input_index += next_patt.len();
+                    }
+
+                    patt_index += 1;
+                    //return false;
+                    continue;
+                }
                 _ => {
                     prev_pattern = &pattern[patt_index..patt_index + 1];
                     let is_optional =
@@ -221,7 +235,8 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
         //OR pattern is optional/end marker
         //OR the remaining pattern is optional
         return patt_index >= pattern.len()
-            || (patt_index == pattern.len() - 1) && ['$', '?'].contains(&patt_chars[patt_index])
+            || ((patt_index == pattern.len() - 1)
+                && ['$', '?', '.'].contains(&patt_chars[patt_index]))
             || (patt_len - patt_index > 1 && check_optional(&pattern[patt_index..]));
     };
     true
@@ -258,5 +273,28 @@ fn check_optional(pattern: &str) -> bool {
             eprintln!("opt position:{opt_position}");
             patt_index + 1 < patt_len && opt_position == '?'
         }
+    }
+}
+
+fn get_next_pattern(pattern: &str) -> &str {
+    let mut patt_index: usize = 0;
+    let patt_len = pattern.len();
+    let patt_chars: Vec<char> = pattern.chars().collect();
+
+    match patt_chars[patt_index] {
+        '[' => {
+            let char_group_end = patt_chars[patt_index + 1..]
+                .iter()
+                .position(|c| c == &']')
+                .unwrap();
+            &pattern[patt_index..patt_index + char_group_end + 2]
+        }
+        '\\' => {
+            while (patt_index + 1) < patt_len && &pattern[patt_index + 1..patt_index + 2] == r"\" {
+                patt_index += 1;
+            }
+            &pattern[patt_index..patt_index + 2]
+        }
+        _ => &pattern[patt_index..patt_index + 1],
     }
 }
