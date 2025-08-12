@@ -84,16 +84,16 @@ fn main() {
 fn match_by_char(input_line: &str, pattern: &str) -> bool {
     let patt_chars: Vec<char> = pattern.chars().collect();
     let input_chars: Vec<char> = input_line.chars().collect();
+    let mut patt_index: usize = 0;
+    let mut input_index = 0;
+    let patt_len = pattern.len();
+    let input_len = input_line.len();
 
     if pattern.chars().count() == 1 {
         return input_line.contains(pattern);
     } else {
-        let mut patt_index: usize = 0;
-        let mut input_index = 0;
-        let patt_len = pattern.len();
-        let input_len = input_line.len();
-
         while patt_index < patt_len && input_index < input_len {
+            // eprintln!("start of while input i:{input_index}, pattern i:{patt_index}");
             if patt_chars[patt_index] == '[' && patt_chars[patt_index + 1..].contains(&']') {
                 let char_group_end = patt_chars[patt_index + 1..]
                     .iter()
@@ -154,7 +154,7 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 }
                 patt_index += 2;
                 input_index += found_pos + 1;
-                eprintln!("found a digit, new pos{found_pos}, new patt pos{patt_index}");
+                eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
             } else {
                 if &pattern[patt_index..patt_index + 1] != &input_line[input_index..input_index + 1]
                 {
@@ -169,5 +169,11 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
             }
         }
     }
+
+    // if input fully parsed but pattern not exhausted
+    if input_index == input_chars.len() {
+        eprintln!("final return: input i:{input_index}, patt i:{patt_index}");
+        return patt_index >= pattern.len();
+    };
     true
 }
