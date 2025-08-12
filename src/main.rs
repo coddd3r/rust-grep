@@ -88,6 +88,7 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
     let mut input_index = 0;
     let patt_len = pattern.len();
     let input_len = input_line.len();
+    let mut prev_pattern = "";
 
     if patt_chars[0] == '^' {
         patt_index += 1
@@ -105,6 +106,7 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
 
                 let char_group_length = char_group_end - patt_index;
                 let lett_group = &patt_chars[patt_index + 1..patt_index + char_group_end + 1];
+                prev_pattern = &pattern[patt_index..patt_index + char_group_end + 2];
                 let mut found_pos = 0;
                 eprintln!(
                     "checking char group of length:{char_group_length}, group:{:?}",
@@ -144,6 +146,7 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     patt_index += 1;
                 }
                 let char_class = &pattern[patt_index..patt_index + 2];
+                prev_pattern = char_class;
                 eprintln!("checking char class {}", char_class);
                 let curr_remaining = &input_line[input_index..];
                 let mut found_pos = 0;
@@ -174,7 +177,17 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 patt_index += 2;
                 input_index += found_pos + 1;
                 eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
+            } else if &pattern[patt_index..patt_index + 1] == r"+" {
+                eprintln!("CHECKING MULTIPLE");
+                while input_index < input_len
+                    && match_by_char(&input_line[input_index..input_index + 1], prev_pattern)
+                {
+                    eprintln!("in loop");
+                    input_index += 1;
+                }
+                patt_index += 1;
             } else {
+                prev_pattern = &pattern[patt_index..patt_index + 1];
                 if &pattern[patt_index..patt_index + 1] != &input_line[input_index..input_index + 1]
                 {
                     eprintln!(
