@@ -180,9 +180,12 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
             } else if &pattern[patt_index..patt_index + 1] == r"+" {
                 let mut similar_remaining_in_pattern = 0;
 
-                let mut check_index = patt_index;
+                let mut check_index = patt_index + 1;
                 let prev_pattern_len = prev_pattern.len();
-                while &pattern[check_index + 1..patt_index + prev_pattern_len] == prev_pattern {
+                while check_index < patt_len
+                    && &pattern[check_index..check_index + prev_pattern_len] == prev_pattern
+                {
+                    eprintln!("checking one");
                     check_index += prev_pattern_len;
                     similar_remaining_in_pattern += 1;
                 }
@@ -194,7 +197,17 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     input_index += 1;
                     num_repeats += 1;
                 }
-                patt_index += (num_repeats - similar_remaining_in_pattern) * prev_pattern_len;
+                eprintln!("rpts:{num_repeats}, simi:{similar_remaining_in_pattern}, prev_patt_len:{prev_pattern_len}");
+
+                // if there are more of the same immediately after e.g ca+ats
+                // move pattern pointer forward by at one
+                // move the input index forward by at least 1 * len of prev pattern
+                patt_index += 1;
+                if similar_remaining_in_pattern > 0 {
+                    input_index -= std::cmp::max(num_repeats - similar_remaining_in_pattern, 1)
+                        * prev_pattern_len;
+                    eprintln!("new pattern index,{patt_index}")
+                }
             } else {
                 prev_pattern = &pattern[patt_index..patt_index + 1];
                 if &pattern[patt_index..patt_index + 1] != &input_line[input_index..input_index + 1]
