@@ -34,8 +34,10 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                             "checking char group of length:{char_group_length}, group:{:?}",
                             lett_group
                         );
-
-                        if !(char_group_length > 1 && {
+                        let optional_position = patt_index + char_group_end + 2;
+                        let is_optional =
+                            optional_position < patt_len && patt_chars[optional_position] == '?';
+                        let res = char_group_length > 1 && {
                             if patt_chars[patt_index + 1] != '^' {
                                 input_chars[input_index..].iter().enumerate().any(|(i, c)| {
                                     if lett_group.contains(&c) {
@@ -58,11 +60,23 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                                     }
                                 })
                             }
-                        }) {
+                        };
+
+                        if !is_optional && !res {
                             return false;
                         }
+
                         patt_index += char_group_length + 2;
-                        input_index += found_pos + 1;
+                        if res {
+                            input_index += found_pos + 1;
+                        }
+                        if is_optional {
+                            patt_index += 1;
+                        }
+
+                        eprintln!(
+                            "opt:{is_optional}, found res:{res}, patt index:{patt_index}, input index:{input_index}"
+                        );
                     }
                 }
                 '\\' => {
@@ -74,7 +88,9 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                     eprintln!("checking char class {}", char_class);
                     let curr_remaining = &input_line[input_index..];
                     let mut found_pos = 0;
-                    if !(match char_class {
+                    let is_optional =
+                        patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?';
+                    let res = match char_class {
                         r"\d" => curr_remaining.chars().enumerate().any(|(i, e)| {
                             if e.is_digit(10) {
                                 found_pos = i;
@@ -92,14 +108,20 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                         }),
                         // _ => match_pattern(&curr_remaining, &pattern[patt_index..]),
                         _ => unreachable!(),
-                    }) {
+                    };
+                    if !res && !is_optional {
                         eprintln!(
                         "returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}"
                     );
                         return false;
                     }
                     patt_index += 2;
-                    input_index += found_pos + 1;
+                    if res {
+                        input_index += found_pos + 1;
+                    }
+                    if is_optional {
+                        patt_index += 1;
+                    }
                     eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
                 }
                 '+' => {
@@ -136,17 +158,24 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
                 }
                 _ => {
                     prev_pattern = &pattern[patt_index..patt_index + 1];
-                    if &pattern[patt_index..patt_index + 1]
-                        != &input_line[input_index..input_index + 1]
-                    {
+                    let is_optional =
+                        patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?';
+                    let res = patt_chars[patt_index] == input_chars[input_index];
+                    eprintln!("optional char?{is_optional}");
+                    if !res && !is_optional {
                         eprintln!(
                         "returning false in char char mapping, curr patter pos:{patt_index}, input pos:{input_index}"
                     );
                         return false;
                     }
+                    if res {
+                        input_index += 1;
+                    }
+                    if is_optional {
+                        patt_index += 1;
+                    }
 
                     patt_index += 1;
-                    input_index += 1;
                 }
             }
         }
@@ -156,7 +185,38 @@ pub fn match_by_char(input_line: &str, pattern: &str) -> bool {
     if input_index == input_chars.len() {
         eprintln!("final return: input i:{input_index}, patt i:{patt_index}");
         return patt_index >= pattern.len()
-            || (patt_index == pattern.len() - 1) && ['$', '?'].contains(&patt_chars[patt_index]);
+            || (patt_index == pattern.len() - 1) && ['$', '?'].contains(&patt_chars[patt_index])
+            || check_optional(&pattern[patt_index..]);
     };
     true
+}
+
+fn check_optional(pattern: &str) -> bool {
+    let mut patt_index: usize = 0;
+    let patt_len = pattern.len();
+    let patt_chars: Vec<char> = pattern.chars().collect();
+
+    match patt_chars[patt_index] {
+        '[' => {
+            if patt_chars[patt_index + 1..].contains(&']') {
+                let char_group_end = patt_chars[patt_index + 1..]
+                    .iter()
+                    .position(|c| c == &']')
+                    .unwrap();
+                let optional_position = patt_index + char_group_end + 2;
+                optional_position < patt_len && patt_chars[optional_position] == '?'
+            } else {
+                false
+            }
+        }
+        '\\' => {
+            while &pattern[patt_index + 1..patt_index + 2] == r"\" {
+                patt_index += 1;
+            }
+            let char_class = &pattern[patt_index..patt_index + 2];
+            eprintln!("checking char class {}", char_class);
+            patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?'
+        }
+        _ => patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?',
+    }
 }
