@@ -89,6 +89,9 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
     let patt_len = pattern.len();
     let input_len = input_line.len();
 
+    if patt_chars[0] == '^' {
+        patt_index += 1
+    }
     if pattern.chars().count() == 1 {
         return input_line.contains(pattern);
     } else {
