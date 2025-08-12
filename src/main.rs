@@ -190,9 +190,10 @@ fn match_by_char(input_line: &str, pattern: &str) -> bool {
     }
 
     // if input fully parsed but pattern not exhausted
-    if input_index == input_chars.len() && patt_chars[patt_index] != '$' {
+    if input_index == input_chars.len() {
         eprintln!("final return: input i:{input_index}, patt i:{patt_index}");
-        return patt_index >= pattern.len();
+        return patt_index >= pattern.len()
+            || (patt_index == pattern.len() - 1) && patt_chars[patt_index] == '$';
     };
     true
 }
