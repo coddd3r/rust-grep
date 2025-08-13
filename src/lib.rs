@@ -63,9 +63,8 @@ pub fn match_by_char(
                                     }
                                 })
                             } else {
-                                eprintln!("checking negative group");
                                 let neg_group = &lett_group[1..];
-                                patt_index += 1;
+                                eprintln!("checking negative group:{:?}",neg_group );
                                 input_chars[input_index..].iter().enumerate().any(|(i, c)| {
                                     if !neg_group.contains(&c) {
                                         found_pos = i;
@@ -81,7 +80,7 @@ pub fn match_by_char(
                             return (false, None);
                         }
 
-                        patt_index += char_group_length + 1;
+                        patt_index += char_group_length + 2;
                         if res {
                             input_index += found_pos + 1;
                         }

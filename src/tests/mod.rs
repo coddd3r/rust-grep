@@ -9,6 +9,7 @@ fn check_optional_char() {
 
 #[test]
 fn check_optional_group() {
+    assert!(match_by_char("a", "[abc]", false).0);
     assert!(match_by_char("a", "[abc]?", false).0);
     assert!(match_by_char("x", "[abc]?", false).0);
     assert!(match_by_char("x", "[abc]?x", false).0);
@@ -60,6 +61,7 @@ fn failed_before_tester() {
     //echo -n "caaats" | ./your_program.sh -E "ca+at"
     assert!(match_by_char("caaats", "ca+at", false).0);
     assert!(match_by_char("apple", "[^xyz]", false).0);
+    assert!(match_by_char("e", "[blueberry]", false).0);
 }
 
 #[test]
