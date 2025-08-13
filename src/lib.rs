@@ -11,6 +11,7 @@ pub fn match_by_char(
     );
 
     let patt_chars: Vec<char> = pattern.chars().collect();
+    //pre-empt optional groups
     if full_match_optional && !patt_chars.contains(&')') && patt_chars.contains(&'|') {
         let mut use_retlen = 0;
         let opt_ret = pattern.split('|').any(|e| {
@@ -29,7 +30,7 @@ pub fn match_by_char(
     let input_len = input_line.len();
     let mut prev_pattern = String::new();
 
-    //let mut patt_capture_groups: Vec<(usize, usize)> = Vec::new();
+    let mut patt_capture_groups: Vec<(usize, usize)> = Vec::new();
 
     eprintln!("input length:{input_len}, pattern len:{patt_len}, prev_pattern:{prev_pattern}");
     if pattern.is_empty() {
@@ -251,13 +252,29 @@ pub fn match_by_char(
                     continue;
                 }
                 '(' => {
+                    patt_capture_groups.push((patt_index, 0));
+                    eprintln!("opening at:{}", patt_index);
                     if patt_chars[patt_index + 1..].contains(&')') {
                         let mut num_opening: usize = 1;
                         let mut capture_group_end = 0;
                         let rem_chars = &patt_chars[patt_index + 1..];
                         for (i, e) in rem_chars.iter().enumerate() {
                             if e == &'(' {
-                                num_opening += 1
+                                eprintln!("opening at:{}", patt_index + 1 + i);
+                                patt_capture_groups.push((patt_index + 1 + i, 0));
+                                eprintln!("curr:{:?}", patt_capture_groups);
+                                num_opening += 1;
+                            }
+                            if e == &')' {
+                                eprintln!("closing at:{}", patt_index + 1 + i);
+                                eprintln!("num opening:{num_opening}");
+                                let zero_pos =
+                                    patt_capture_groups.iter().rev().position(|e| e.1 == 0);
+                                let num_groups = patt_capture_groups.len();
+                                patt_capture_groups[num_groups - zero_pos.unwrap() - 1].1 =
+                                    patt_index + 1 + i;
+                                //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
+                                eprintln!("curr:{:?}", patt_capture_groups);
                             }
                             if e == &')' && num_opening == 1 {
                                 capture_group_end = i;
@@ -267,6 +284,11 @@ pub fn match_by_char(
                                 num_opening -= 1;
                             }
                         }
+
+                        eprintln!("\n\nCAPT GROUPS:{:?}\n\n", patt_capture_groups);
+                        patt_capture_groups.iter().for_each(|e| {
+                            eprintln!("opening:{}, closing:{}", patt_chars[e.0], patt_chars[e.1])
+                        });
 
                         let closing_bracket_index = patt_index + capture_group_end + 1;
                         let capt_group = patt_chars[patt_index + 1..closing_bracket_index]
