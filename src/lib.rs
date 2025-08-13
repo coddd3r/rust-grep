@@ -24,7 +24,7 @@ pub fn match_by_char(
         patt_index += 1
     }
     if pattern.chars().count() == 1 {
-        return (input_line.contains(pattern), None);
+        return (input_line.contains(pattern), Some(1));
     } else {
         while patt_index < patt_len && input_index < input_len {
             // eprintln!("start of while input i:{input_index}, pattern i:{patt_index}");
@@ -179,8 +179,8 @@ pub fn match_by_char(
                             true
                         );
                         if !res.0 {break;}
-                        eprintln!("in loop");
-                        input_index += res.1.unwrap() ;
+                        eprintln!("in loop res?:{}", res.0);
+                        input_index += res.1.unwrap();
                         num_repeats += 1;
                     }
                     eprintln!("rpts:{num_repeats}, simi:{similar_remaining_in_pattern}, prev_patt_len:{prev_pattern_len}");
@@ -407,6 +407,10 @@ pub fn match_by_char(
         );
         return (true, Some(ret_len));
     }
+
+    if patt_index == patt_len {
+        return (true, Some(patt_len));
+    }
     // if input fully parsed but pattern not exhausted
     if input_index == input_chars.len() {
         //optional full parse
@@ -431,7 +435,6 @@ pub fn match_by_char(
     eprintln!("\n\n:( COP OUT TRUE");
     eprintln!("input:{input_line}, pattern:{pattern}, input pos:{input_index}, patt_pos:{patt_index}");
     eprintln!("input len:{input_len}, pattern len:{patt_len}, ");
-    //return (true, Some(input_len));
     return (false,None);
 }
 
