@@ -10,7 +10,7 @@ fn check_optional_char() {
 #[test]
 fn check_optional_group() {
     assert!(match_by_char("a", "[abc]?", false).0);
-    assert!(match_by_char("x", "[abc]?", false).0);
+    assert!(!match_by_char("x", "[abc]?", false).0);
     assert!(match_by_char("x", "[abc]?x", false).0);
     assert!(match_by_char("a", "[abc]?x?", false).0);
 }
@@ -33,7 +33,7 @@ fn check_optional_type() {
 fn check_wildcard() {
     assert!(match_by_char("dog", r"d.g", false).0);
     assert!(match_by_char("2", r".[^abc]", false).0);
-    assert!(match_by_char("2", r".[abc]", false).0);
+    assert!(!match_by_char("2", r".[abc]", false).0);
     assert!(match_by_char("2", r".\d", false).0);
     assert!(match_by_char("dog", r"d.g.", false).0);
     assert!(match_by_char("dog", r".d.g.", false).0);
@@ -53,6 +53,19 @@ fn failed_before_tester() {
         match_by_char(
             "I see 1 cat, 2 dogs and 3 cows",
             r"^I see (\d (cat|dog|cow)s?(, | and )?)+$",
+            false
+        )
+        .0
+    )
+}
+
+#[test]
+fn layered_groups() {
+    //echo -n "I see 1 cat, 2 dogs and 3 cows" | ./your_program.sh -E "^I see (\d (cat|dog|cow)(, | and )?)+$
+    assert!(
+        !match_by_char(
+            "I see 1 cat, 2 dogs and 3 cows",
+            r"^I see (\d (cat|dog|cow)(, | and )?)+$",
             false
         )
         .0
