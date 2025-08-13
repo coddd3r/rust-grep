@@ -81,7 +81,7 @@ pub fn match_by_char(
                             return (false, None);
                         }
 
-                        patt_index += char_group_length + 2;
+                        patt_index += char_group_length + 1;
                         if res {
                             input_index += found_pos + 1;
                         }
@@ -470,6 +470,9 @@ fn check_optional(pattern: &str) -> bool {
             patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?'
         }
         _ => {
+           if ['?'].contains(&patt_chars[patt_index]){
+                patt_index +=1;
+            }
             let opt_position = patt_chars[patt_index + 1];
             eprintln!("opt position:{opt_position}");
             patt_index + 1 < patt_len && opt_position == '?'
