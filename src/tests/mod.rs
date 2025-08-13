@@ -65,7 +65,7 @@ fn failed_before_tester() {
 fn layered_groups() {
     //echo -n "I see 1 cat, 2 dogs and 3 cows" | ./your_program.sh -E "^I see (\d (cat|dog|cow)(, | and )?)+$
     assert!(
-        match_by_char(
+        !match_by_char(
             "I see 1 cat, 2 dogs and 3 cows",
             r"^I see (\d (cat|dog|cow)(, | and )?)+$",
             false

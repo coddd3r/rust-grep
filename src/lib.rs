@@ -349,10 +349,13 @@ pub fn match_by_char(
                     }
                 }
                 _ => {
-                    if ['?', '$'].contains( &patt_chars[patt_index]) {
+                    if ['?'].contains( &patt_chars[patt_index]) {
                         patt_index +=1;
                         continue;
                     }
+                    if patt_chars[patt_index ] == '$' && patt_index != patt_len -1{
+                        return (false, None);
+                    } 
                     prev_pattern = patt_chars[patt_index..patt_index + 1]
                         .into_iter()
                         .collect::<String>();
