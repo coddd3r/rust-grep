@@ -71,7 +71,7 @@ pub fn check_num_similar_pattern(
 ) -> usize {
     let mut check_index = patt_index + 1;
     let mut similar_remaining_in_pattern = 0;
-    eprintln!("before while, check i:{check_index}, patt len:{patt_len}");
+    eprintln!("\n________\nbefore while, check i:{check_index}, patt len:{patt_len}");
     while check_index < patt_len {
         eprintln!("\n\n\nchecking repeat\n\n\n");
         //if there is an exact similar to the prev matched pattern
@@ -101,5 +101,6 @@ pub fn check_num_similar_pattern(
         }
         break;
     }
+    eprintln!("returning num sim:{similar_remaining_in_pattern}");
     similar_remaining_in_pattern
 }

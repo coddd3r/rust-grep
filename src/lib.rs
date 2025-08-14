@@ -14,7 +14,7 @@ pub fn match_by_char(
     full_match_optional: bool,
 ) -> (bool, Option<usize>, String) {
     eprintln!(
-        "\n--------------\n----- fn start: MATCHING: input:{:?}, patt:{:?}",
+        "\n--------------\n----- fn start: MATCHING: input:{:?}, patt:{:?}, full optional?{full_match_optional}",
         input_line, pattern
     );
 
@@ -232,7 +232,7 @@ pub fn match_by_char(
                         &prev_pattern,
                         &patt_chars,
                     );
-                    eprintln!("rpts:{num_repeats}, simi:{similar_remaining_in_pattern}, prev_patt_len:{prev_pattern_len}");
+                    eprintln!("\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern}, prev_patt_len:{prev_pattern_len}");
 
                     // if there are more of the same immediately after e.g ca+ats
                     // move pattern pointer forward by at one
@@ -242,14 +242,15 @@ pub fn match_by_char(
                         input_index -= std::cmp::max(num_repeats - similar_remaining_in_pattern, 1)
                         //    * prev_pattern_len;
                     }
+                    eprintln!("AFTER finding all similar: new input i:{input_index}\n");
 
-                    // if patt_index == patt_len {
-                    //     //let actual index =
-                    //     //let matched
-                    //     let ret = (true, Some(input_index - num_repeats), String::new());
-                    //     eprintln!("repeating patt returning:{:?}", ret);
-                    //     return ret;
-                    // }
+                    if patt_index == patt_len {
+                        let actual_index = input_index - num_repeats;
+                        let matched_input: String = input_chars[..actual_index].iter().collect();
+                        let ret = (true, Some(actual_index), matched_input);
+                        eprintln!("repeating patt returning:{:?}", ret);
+                        return ret;
+                    }
                 }
 
                 '.' => {
@@ -347,7 +348,7 @@ pub fn match_by_char(
                             eprintln!("in layers groups");
                             let split_groups: Vec<_> = capt_group.split(split_char).collect();
                             if !split_groups.iter().all(| e| {
-                                eprintln!("\nmatching group:{e}");
+                                eprintln!("\nmatching SPLIT group:{e}");
                                 let sub_groups: Vec<_> = e.split(')').collect();
                                 let res = sub_groups.iter().enumerate().all(|(x,sub_gr)| {
                                     eprintln!("\nmatching SUBGROUP:{sub_gr}");
@@ -410,6 +411,7 @@ pub fn match_by_char(
                                 if res.0 {
                                     matched_input_len = res.1.unwrap();
                                 }
+                                eprintln!("\n\nGROUP RESULT:{:?}", res);
                                 res.0
                             }) {
                                 eprintln!("\nSECOND SPLIT groups matching false for input:{input_line}, patt:{pattern}\n");
@@ -425,7 +427,8 @@ pub fn match_by_char(
                         patt_index += capt_group.len() + 2;
                         let captured_input: String =
                             input_chars[start_capt_input..input_index].iter().collect();
-                        eprintln!("\n\n\nCAPTURED:{captured_input}");
+                        eprintln!("\n\n\nCAPTURED:{captured_input} for pattern:{capt_group}");
+                        eprintln!("input:{input_line}, input i:{input_index}, pattern:{pattern}, patt i:{patt_index}");
                         prev_pattern = capt_group;
                     }
                 }
