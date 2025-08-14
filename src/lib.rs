@@ -244,13 +244,13 @@ pub fn match_by_char(
                     }
                     eprintln!("AFTER finding all similar: new input i:{input_index}\n");
 
-                    if patt_index == patt_len {
-                        let actual_index = input_index - num_repeats;
-                        let matched_input: String = input_chars[..actual_index].iter().collect();
-                        let ret = (true, Some(actual_index), matched_input);
-                        eprintln!("repeating patt returning:{:?}", ret);
-                        return ret;
-                    }
+                    // if patt_index == patt_len {
+                    //     let actual_index = input_index - num_repeats;
+                    //     let matched_input: String = input_chars[..actual_index].iter().collect();
+                    //     let ret = (true, Some(actual_index), matched_input);
+                    //     eprintln!("repeating patt returning:{:?}", ret);
+                    //     return ret;
+                    // }
                 }
 
                 '.' => {
