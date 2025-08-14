@@ -101,12 +101,17 @@ pub fn match_by_char(
                             })
                         } else {
                             let neg_group = &lett_group[1..];
-                            eprintln!("checking negative group:{:?}", neg_group);
-                            input_chars[input_index..].iter().enumerate().any(|(i, c)| {
+                            eprintln!(
+                                "checking negative group:{:?}, input:{input_line}",
+                                neg_group
+                            );
+                            input_chars[input_index..].iter().enumerate().all(|(i, c)| {
                                 if !neg_group.contains(&c) {
                                     found_pos = i;
+                                    eprintln!("is true");
                                     return true;
                                 } else {
+                                    eprintln!("false");
                                     return false;
                                 }
                             })

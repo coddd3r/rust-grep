@@ -19,7 +19,9 @@ fn check_optional_group() {
 #[test]
 fn check_negative_group() {
     assert!(match_by_char("apple", "[^xyz]", false, &Vec::new()).0);
+    assert!(!match_by_char("xyz", r"([^xyz]+)", false, &Vec::new()).0);
 }
+
 #[test]
 fn cc_optional() {
     assert!(match_by_char("act", "ca?t", false, &Vec::new()).0);
@@ -159,10 +161,20 @@ fn nested_backref() {
 
 #[test]
 fn long_backref() {
-    //echo -n "abc-def is abc-def, not efg, abc, or def" | ./your_program.sh -E "(([abc]+)-([def]+)) is \1, not ([^xyz]+), \2, or \3"
+    ////echo -n "abc-def is abc-def, not efg, abc, or def" | ./your_program.sh -E "(([abc]+)-([def]+)) is \1, not ([^xyz]+), \2, or \3"
     assert!(
         match_by_char(
             "abc-def is abc-def, not efg, abc, or def",
+            r"(([abc]+)-([def]+)) is \1, not ([^xyz]+), \2, or \3",
+            false,
+            &Vec::new()
+        )
+        .0
+    );
+    ////echo -n "abc-def is abc-def, not xyz, abc, or def" | ./your_program.sh -E "(([abc]+)-([def]+)) is \1, not ([^xyz]+), \2, or \3"
+    assert!(
+        !match_by_char(
+            "abc-def is abc-def, not xyz, abc, or def",
             r"(([abc]+)-([def]+)) is \1, not ([^xyz]+), \2, or \3",
             false,
             &Vec::new()
