@@ -112,30 +112,22 @@ pub fn check_num_similar_pattern(
     );
     eprintln!("before while, check i:{check_index}, patt len:{patt_len}");
     while check_index < patt_len {
-        eprintln!("\nchecking repeat");
+        let next_pattern = get_next_pattern(&patt_chars[check_index..].iter().collect::<String>());
+        eprintln!("\nchecking repeat with next pattern:{next_pattern}");
+
+        //TODO: handle checking repeats in capture groups
+
         //if there is an exact similar to the prev matched pattern
-        if check_index + prev_pattern_len < patt_len
-            && patt_chars[check_index..check_index + prev_pattern_len]
-                .into_iter()
-                .collect::<String>()
-                == *prev_pattern
-        {
+        if next_pattern == *prev_pattern {
             eprintln!("checking full patt");
             check_index += prev_pattern_len;
             similar_remaining_in_pattern += 1;
             continue;
         }
         // if the next char in the pattern matches the pattern also e.g "\d" and '2'
-        if match_by_char(
-            &format!("{}", patt_chars[check_index]),
-            &prev_pattern,
-            false,
-            patt_capture_groups,
-        )
-        .0
-        {
+        if match_by_char(&next_pattern, &prev_pattern, false, patt_capture_groups).0 {
             eprintln!("checking one patt char");
-            check_index += 1;
+            check_index += next_pattern.len();
             similar_remaining_in_pattern += 1;
             continue;
         }

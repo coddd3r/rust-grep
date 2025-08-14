@@ -62,8 +62,8 @@ pub fn match_by_char(
     }
 
     while patt_index < patt_len && input_index < input_len {
-        // eprintln!("in loop input:{input_line}, input len:{input_len}, input i:{input_index}");
-        // eprintln!("in loop, pattern:{pattern}, patt len:{patt_len}, patt i:{patt_index}");
+        eprintln!("in loop input:{input_line}, input len:{input_len}, input i:{input_index}");
+        eprintln!("in loop, pattern:{pattern}, patt len:{patt_len}, patt i:{patt_index}");
         //eprintln!("in loop with char{:?}", patt_chars[patt_index]);
         // eprintln!("start of while input i:{input_index}, pattern i:{patt_index}");
         match patt_chars[patt_index] {
@@ -436,7 +436,7 @@ pub fn match_by_char(
                         patt_index += 1;
                         continue;
                     } else {
-                        eprintln!("\n\nIN SECOND SPLIT\n");
+                        eprintln!("\n\nIN SECOND SPLIT pattern:{pattern} patt i:{patt_index}\n input:{input_line}, input i:{input_index}\n");
                         let mut split_groups = capt_group.split(split_char);
 
                         if !split_groups.any(|e| {
@@ -583,7 +583,7 @@ pub fn match_by_char(
                 let remaining_patt = patt_chars[patt_index..].into_iter().collect::<String>();
                 check_optional(&remaining_patt)
             };
-        eprintln!("final return: input:{input_line}, i:{input_index}, input len:{input_len}\n  patt len:{patt_len}, pattern:{pattern}, patt i:{patt_index},\nres:{res}");
+        eprintln!("final return: input:{input_line}, i:{input_index}, input len:{input_len}\n  patt len:{patt_len}, pattern:{:#?}, patt i:{patt_index},\nres:{res}", pattern);
         return (res, Some(input_len), matched_input);
     };
     eprintln!("\n\n:( COP OUT TRUE");

@@ -156,3 +156,17 @@ fn nested_backref() {
         .0
     )
 }
+
+#[test]
+fn long_backref() {
+    //echo -n "abc-def is abc-def, not efg, abc, or def" | ./your_program.sh -E "(([abc]+)-([def]+)) is \1, not ([^xyz]+), \2, or \3"
+    assert!(
+        match_by_char(
+            "abc-def is abc-def, not efg, abc, or def",
+            r"(([abc]+)-([def]+)) is \1, not ([^xyz]+), \2, or \3",
+            false,
+            &Vec::new()
+        )
+        .0
+    )
+}
