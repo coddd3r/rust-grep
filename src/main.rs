@@ -18,7 +18,7 @@ fn main() {
     let mut input_line = String::new();
 
     io::stdin().read_line(&mut input_line).unwrap();
-    let res = match_by_char(&input_line, &pattern, false);
+    let res = match_by_char(&input_line, &pattern, false, &Vec::new());
     if res.0 {
         eprintln!("SUCCESS");
         process::exit(0)

@@ -102,6 +102,7 @@ pub fn check_num_similar_pattern(
     prev_pattern_len: usize,
     prev_pattern: &str,
     patt_chars: &Vec<char>,
+    patt_capture_groups: &Vec<(usize, usize, String)>,
 ) -> usize {
     let mut check_index = patt_index + 1;
     let mut similar_remaining_in_pattern = 0;
@@ -129,6 +130,7 @@ pub fn check_num_similar_pattern(
             &format!("{}", patt_chars[check_index]),
             &prev_pattern,
             false,
+            patt_capture_groups,
         )
         .0
         {
