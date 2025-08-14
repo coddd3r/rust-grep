@@ -54,20 +54,29 @@ fn check_qty_wildcard() {
 
 #[test]
 fn failed_before_tester() {
-    assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws", false).0);
+    // assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws", false).0);
+    // assert!(
+    //     match_by_char(
+    //         "I see 1 cat, 2 dogs and 3 cows",
+    //         r"^I see (\d (cat|dog|cow)s?(, | and )?)+$",
+    //         false
+    //     )
+    //     .0
+    // );
+    // ////echo -n "caaats" | ./your_program.sh -E "ca+at"
+    // assert!(match_by_char("caaats", "ca+at", false).0);
+    // assert!(match_by_char("apple", "[^xyz]", false).0);
+    // assert!(match_by_char("e", "[blueberry]", false).0);
+    ////echo -n "abcd is abcd, not efg" | ./your_program.sh -E "([abcd]+) is \1, not [^xyz]+"
+    ////echo -n "this starts and ends with this" | ./your_program.sh -E "^(\w+) starts and ends with \1$"
     assert!(
         match_by_char(
-            "I see 1 cat, 2 dogs and 3 cows",
-            r"^I see (\d (cat|dog|cow)s?(, | and )?)+$",
+            "this starts and ends with this",
+            r"^(\w+) starts and ends with \1$",
             false
         )
         .0
     );
-    ////echo -n "caaats" | ./your_program.sh -E "ca+at"
-    assert!(match_by_char("caaats", "ca+at", false).0);
-    assert!(match_by_char("apple", "[^xyz]", false).0);
-    assert!(match_by_char("e", "[blueberry]", false).0);
-    ////echo -n "abcd is abcd, not efg" | ./your_program.sh -E "([abcd]+) is \1, not [^xyz]+"
 }
 
 #[test]

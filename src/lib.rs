@@ -525,7 +525,7 @@ pub fn match_by_char(
             return (true, Some(input_len), matched_input);
         }
         let res = patt_index >= patt_len
-            || ((patt_index == patt_len - 1) && ['$', '?'].contains(&patt_chars[patt_index]))
+            || ((patt_index == patt_len - 1) && ['$', '?', '+'].contains(&patt_chars[patt_index]))
             || patt_len - patt_index > 1 && {
                 let remaining_patt = patt_chars[patt_index..].into_iter().collect::<String>();
                 check_optional(&remaining_patt)
