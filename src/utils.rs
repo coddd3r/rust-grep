@@ -98,8 +98,6 @@ pub fn get_next_pattern(pattern: &str) -> String {
 
 pub fn check_num_similar_pattern(
     patt_index: usize,
-    patt_len: usize,
-    prev_pattern_len: usize,
     prev_pattern: &str,
     patt_chars: &Vec<char>,
     patt_capture_groups: &Vec<(usize, usize, String)>,
@@ -110,12 +108,25 @@ pub fn check_num_similar_pattern(
         "\n________\nCHECKING SIMILAR PATTERN: patt i:{check_index}, patt_chars:{:?}",
         patt_chars
     );
+    let patt_len = patt_chars.len();
     eprintln!("before while, check i:{check_index}, patt len:{patt_len}");
     while check_index < patt_len {
         let next_pattern = get_next_pattern(&patt_chars[check_index..].iter().collect::<String>());
+        let prev_pattern_len = prev_pattern.len();
         eprintln!("\nchecking repeat with next pattern:{next_pattern}");
 
         //TODO: handle checking repeats in capture groups
+        if next_pattern.chars().nth(0).unwrap() == '\\' {
+            eprintln!("\n\n\n\n\n\n****SIMILAR CAPTURE: with capt:{next_pattern}");
+            let capt_gr_num = next_pattern.chars().nth(1).unwrap().to_digit(10).unwrap();
+            let captured = &patt_capture_groups[capt_gr_num as usize - 1].2;
+            similar_remaining_in_pattern += check_num_similar_pattern(
+                0,
+                prev_pattern,
+                &captured.chars().collect(),
+                patt_capture_groups,
+            )
+        }
 
         //if there is an exact similar to the prev matched pattern
         if next_pattern == *prev_pattern {
@@ -133,6 +144,6 @@ pub fn check_num_similar_pattern(
         }
         break;
     }
-    eprintln!("returning num sim:{similar_remaining_in_pattern}");
+    eprintln!("RETURNING SIMILAR :{similar_remaining_in_pattern}");
     similar_remaining_in_pattern
 }

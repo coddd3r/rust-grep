@@ -244,8 +244,6 @@ pub fn match_by_char(
 
                 let similar_remaining_in_pattern = check_num_similar_pattern(
                     patt_index,
-                    patt_len,
-                    prev_pattern_len,
                     &prev_pattern,
                     &patt_chars,
                     &patt_capture_groups,
@@ -319,11 +317,13 @@ pub fn match_by_char(
                     let capt_chars = &patt_chars[patt_index + 1..closing_bracket_index];
                     let capt_group = capt_chars.iter().collect::<String>();
 
+                    //check after this repeated group
+                    //how many of the remaning subpattern types would match the same
+                    //as this repeated group
+                    let mut similar_in_patt = 0;
                     if capt_chars[capt_chars.len() - 1] == '+' {
-                        let similar_in_patt = check_num_similar_pattern(
+                        similar_in_patt = check_num_similar_pattern(
                             closing_bracket_index,
-                            patt_len,
-                            capt_group.len() - 1,
                             &capt_group[..capt_group.len() - 1],
                             &patt_chars,
                             &patt_capture_groups,
@@ -475,6 +475,9 @@ pub fn match_by_char(
                     //patt_capture_groups[0].2 = captured_input;
                     eprintln!("input:{input_line}, input i:{input_index}, pattern:{pattern}, patt i:{patt_index}");
                     prev_pattern = capt_group;
+
+                    // remove matches that could be matched later in the pattern
+                    input_index -= similar_in_patt;
                 }
             }
 
