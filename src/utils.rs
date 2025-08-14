@@ -64,28 +64,30 @@ pub fn get_next_pattern(pattern: &str) -> String {
             '(' => {
                 if patt_chars[patt_index + 1..].contains(&')') {
                     let mut num_opening: usize = 1;
-                    let mut capture_group_end = 0;
                     let rem_chars = &patt_chars[patt_index + 1..];
+                    let mut first_start = patt_index;
+                    let mut first_end = 0;
+                    eprintln!("before group loop, patt i:{patt_index}");
                     for (i, e) in rem_chars.iter().enumerate() {
                         if e == &'(' {
                             num_opening += 1;
+                            eprintln!("setting first start to:{i}");
+                            first_start = patt_index + 1 + i;
                         }
                         if e == &')' {
                             eprintln!("num opening:{num_opening}");
-                            //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
-                        }
-                        if e == &')' && num_opening == 1 {
-                            capture_group_end = i;
+                            first_end = patt_index + 1 + i;
                             break;
-                        }
-                        if e == &')' && num_opening > 1 {
-                            num_opening -= 1;
+                            //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
                         }
                     }
 
-                    let closing_bracket_index = patt_index + capture_group_end + 1;
-                    let capt_chars = &patt_chars[patt_index + 1..closing_bracket_index];
+                    let opening_bracket = first_start;
+                    let closing_bracket_index = first_end;
+                    eprintln!("findin next patt, is group,  opening:{opening_bracket}, closing:{closing_bracket_index}");
+                    let capt_chars = &patt_chars[opening_bracket + 1..closing_bracket_index];
                     let capt_group = capt_chars.iter().collect::<String>();
+                    eprintln!("from patt:{pattern} returning next group:{capt_group}");
                     return capt_group;
                 }
             }

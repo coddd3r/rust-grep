@@ -434,12 +434,6 @@ pub fn match_by_char(
                             eprintln!("\n\n'(' SPLIT groups matching false for input:{input_line}, patt:{pattern}\n\n");
                             return NULL_RETURN;
                         }
-                    } else if patt_chars[patt_index] == '('
-                        && !patt_chars[patt_index + 1..].contains(&')')
-                    {
-                        //TODO: handle straggler (
-                        patt_index += 1;
-                        continue;
                     } else {
                         eprintln!("\n\nIN SECOND SPLIT pattern:{pattern} patt i:{patt_index}\n input:{input_line}, input i:{input_index}\n");
                         let mut split_groups = capt_group.split(split_char);
@@ -478,11 +472,16 @@ pub fn match_by_char(
                     patt_capture_groups[use_pos].2 = captured_input;
                     eprintln!("\n\nALL CAPT GROUPS:{:?}", patt_capture_groups);
                     //patt_capture_groups[0].2 = captured_input;
-                    eprintln!("input:{input_line}, input i:{input_index}, pattern:{pattern}, patt i:{patt_index}");
+                    eprintln!("input:{input_line}, input i:{input_index}\n, pattern:{pattern}, patt i:{patt_index}");
                     prev_pattern = capt_group;
 
                     // remove matches that could be matched later in the pattern
                     input_index -= similar_in_patt;
+                } else if patt_chars[patt_index] == '('
+                    && !patt_chars[patt_index + 1..].contains(&')')
+                {
+                    panic!();
+                    //TODO: handle straggler (
                 }
             }
 
@@ -570,7 +569,7 @@ pub fn match_by_char(
         return ret;
     }
 
-    if patt_index == patt_len {
+    if patt_index == patt_len && patt_chars.last().unwrap() != &'$' {
         eprintln!("returning TRUE patt fully parsed");
         return (true, Some(input_index), matched_input);
     }
