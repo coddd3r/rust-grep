@@ -58,22 +58,22 @@ fn check_qty_wildcard() {
 
 #[test]
 fn failed_before_tester() {
-    // assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws", false, &Vec::new()).0);
-    // assert!(
-    //     match_by_char(
-    //         "I see 1 cat, 2 dogs and 3 cows",
-    //         r"^I see (\d (cat|dog|cow)s?(, | and )?)+$",
-    //         false,
-    //         &Vec::new()
-    //     )
-    //     .0
-    // );
-    // ////echo -n "caaats" | ./your_program.sh -E "ca+at"
-    // assert!(match_by_char("caaats", "ca+at", false, &Vec::new()).0);
-    // assert!(match_by_char("apple", "[^xyz]", false, &Vec::new()).0);
-    // assert!(match_by_char("e", "[blueberry]", false, &Vec::new()).0);
-    ////echo -n "abcd is abcd, not efg" | ./your_program.sh -E "([abcd]+) is \1, not [^xyz]+"
-    ////echo -n "this starts and ends with this" | ./your_program.sh -E "^(\w+) starts and ends with \1$"
+    assert!(!match_by_char("sally has 1 dog", r"\d \w\w\ws", false, &Vec::new()).0);
+    assert!(
+        match_by_char(
+            "I see 1 cat, 2 dogs and 3 cows",
+            r"^I see (\d (cat|dog|cow)s?(, | and )?)+$",
+            false,
+            &Vec::new()
+        )
+        .0
+    );
+    ////echo -n "caaats" | ./your_program.sh -E "ca+at"
+    assert!(match_by_char("caaats", "ca+at", false, &Vec::new()).0);
+    assert!(match_by_char("apple", "[^xyz]", false, &Vec::new()).0);
+    assert!(match_by_char("e", "[blueberry]", false, &Vec::new()).0);
+    //echo -n "abcd is abcd, not efg" | ./your_program.sh -E "([abcd]+) is \1, not [^xyz]+"
+    //echo -n "this starts and ends with this" | ./your_program.sh -E "^(\w+) starts and ends with \1$"
     assert!(
         match_by_char(
             "this starts and ends with this",
@@ -190,6 +190,20 @@ fn long_backref2() {
         match_by_char(
             "apple pie is made of apple and pie. love apple pie",
             r"^((\w+) (\w+)) is made of \2 and \3. love \1$",
+            false,
+            &Vec::new()
+        )
+        .0
+    );
+}
+
+#[test]
+fn disordered_back_ref() {
+    ////echo -n  "cat and fish, cat with fish, cat and fish"| ./your_program.sh -E "((c.t|d.g) and (f..h|b..d)), \2 with \3, \1"
+    assert!(
+        match_by_char(
+            "cat and fish, cat with fish, cat and fish",
+            r"((c.t|d.g) and (f..h|b..d)), \2 with \3, \1",
             false,
             &Vec::new()
         )

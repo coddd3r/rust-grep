@@ -22,17 +22,20 @@ pub fn match_by_char(
     let mut patt_capture_groups: Vec<(usize, usize, String)> = Vec::new();
     patt_capture_groups.extend(passed_groups.clone());
     let patt_chars: Vec<char> = pattern.chars().collect();
-    //pre-empt optional groups
+
+    //pre-empt optional groups without brackets around them
     if full_match_optional && !patt_chars.contains(&')') && patt_chars.contains(&'|') {
         let mut use_retlen = 0;
+        let mut use_capt = String::new();
         let opt_ret = pattern.split('|').any(|e| {
             let in_res = match_by_char(input_line, e, full_match_optional, &patt_capture_groups);
             if in_res.0 {
-                use_retlen = in_res.1.unwrap()
+                use_retlen = in_res.1.unwrap();
+                use_capt = in_res.2;
             }
             in_res.0
         });
-        return (opt_ret, Some(use_retlen), String::new());
+        return (opt_ret, Some(use_retlen), use_capt);
     }
 
     let input_chars: Vec<char> = input_line.chars().collect();
