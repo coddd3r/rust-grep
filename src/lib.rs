@@ -41,7 +41,7 @@ pub fn match_by_char(
     let patt_len = patt_chars.len();
     let input_len = input_chars.len();
     let mut prev_pattern = String::new();
-
+    let mut waiting_groups: Vec<usize> = Vec::new();
     // start, end, string matched
 
     eprintln!("input length:{input_len}, pattern len:{patt_len}, prev_pattern:{prev_pattern}");
@@ -131,6 +131,7 @@ pub fn match_by_char(
                         );
                 }
             }
+
             '\\' => {
                 while patt_chars[patt_index + 1] == '\\' {
                     patt_index += 1;
@@ -165,6 +166,7 @@ pub fn match_by_char(
                     patt_index += 2;
                     continue;
                 }
+
                 prev_pattern = char_class.clone();
                 eprintln!("checking char class {}", char_class);
                 let curr_remaining = &input_line[input_index..];
@@ -217,6 +219,7 @@ pub fn match_by_char(
                 }
                 eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
             }
+
             '+' => {
                 eprintln!("\n*************\n***********\nREPEATING PATTERN:{prev_pattern}\n\n\n***********");
 
@@ -277,8 +280,7 @@ pub fn match_by_char(
 
             '(' => {
                 // queue the groups waiting to have their capture field populated
-                //let mut waiting_groups: Vec<usize> = Vec::new();
-                let mut waiting_group_pos: usize = 0;
+                //let mut waiting_group_pos: usize = 0;
                 if patt_chars[patt_index + 1..].contains(&')') {
                     patt_capture_groups.push((patt_index, 0, String::new()));
                     let mut num_opening: usize = 1;
@@ -291,10 +293,13 @@ pub fn match_by_char(
                         }
                         if e == &')' {
                             eprintln!("num opening:{num_opening}");
-                            let zero_pos = patt_capture_groups.iter().rev().position(|e| e.1 == 0);
                             let num_groups = patt_capture_groups.len();
-                            patt_capture_groups[num_groups - zero_pos.unwrap() - 1].1 =
-                                patt_index + 1 + i;
+                            //check for the last position with a zero at .1; means unclosed
+                            let zero_pos = patt_capture_groups.iter().rev().position(|e| e.1 == 0);
+                            let push_i = num_groups - zero_pos.unwrap() - 1;
+                            // have groups wait for a capture by order of the closing brackets
+                            waiting_groups.push(push_i);
+                            patt_capture_groups[push_i].1 = patt_index + 1 + i;
                             //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
                         }
                         if e == &')' && num_opening == 1 {
@@ -306,8 +311,8 @@ pub fn match_by_char(
                         }
                     }
 
-                    waiting_group_pos = patt_capture_groups.len() - 1;
                     eprintln!("\nCAPT GROUPS:{:?}\n", patt_capture_groups);
+                    eprintln!("waiting positions:{:?}", waiting_groups);
 
                     let start_capt_input = input_index;
                     let closing_bracket_index = patt_index + capture_group_end + 1;
@@ -367,14 +372,15 @@ pub fn match_by_char(
                                     return true;
                                 }
 
-                                
                                 let use_patt = {
                                     if is_closer {
-                                    let use_patt:Vec<char> = sub_gr.chars().into_iter().collect();
-                                     use_patt[..use_patt.len()-1].iter().collect()
-                                }else {
-                                    format!("{sub_gr}")
-                                }};
+                                        let use_patt: Vec<char> =
+                                            sub_gr.chars().into_iter().collect();
+                                        use_patt[..use_patt.len() - 1].iter().collect()
+                                    } else {
+                                        format!("{sub_gr}")
+                                    }
+                                };
 
                                 let sub_group_res = match_by_char(
                                     &input_line[input_index..],
@@ -390,13 +396,13 @@ pub fn match_by_char(
                                         "\nsub group:{sub_gr} FOUND, res:{:?}\n",
                                         sub_group_res
                                     );
-                                    eprintln!("for patter:{pattern} waiting group pos:{waiting_group_pos}");
                                     eprintln!("all groups:{:?}", patt_capture_groups);
                                     if is_closer {
-                                        patt_capture_groups[waiting_group_pos].2 = sub_group_res.2;
-                                        if waiting_group_pos > 0 {
-                                            waiting_group_pos -= 1;
-                                        }
+                                        let use_pos = waiting_groups.remove(0);
+                                        eprintln!(
+                                            "for patter:{pattern} waiting group pos:{use_pos}"
+                                        );
+                                        patt_capture_groups[use_pos].2 = sub_group_res.2;
                                     }
                                 }
 
@@ -462,16 +468,10 @@ pub fn match_by_char(
                         input_chars[start_capt_input..input_index].iter().collect();
                     eprintln!("\n\n\nCAPTURED:{captured_input} for pattern:{capt_group}");
 
-                    // check for the capture group that ends at the prev index
-                    // assign it the captured input
-                    // for cg in &mut patt_capture_groups {
-                    //     if cg.1 + 1 == patt_index {
-                    //         cg.2 = captured_input.clone();
-                    //         break;
-                    //     }
-                    // }
-                    patt_capture_groups[waiting_group_pos].2 = captured_input;
-                    eprintln!("\n\n\n\n\nALL CAPT GROUPS:{:?}", patt_capture_groups);
+                    let use_pos = waiting_groups.remove(0);
+                    eprintln!("for patter:{pattern} waiting group pos:{use_pos}");
+                    patt_capture_groups[use_pos].2 = captured_input;
+                    eprintln!("\n\nALL CAPT GROUPS:{:?}", patt_capture_groups);
                     //patt_capture_groups[0].2 = captured_input;
                     eprintln!("input:{input_line}, input i:{input_index}, pattern:{pattern}, patt i:{patt_index}");
                     prev_pattern = capt_group;

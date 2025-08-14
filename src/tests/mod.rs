@@ -145,4 +145,14 @@ fn nested_backref() {
         )
         .0
     );
+    ////echo -n "grep 101 is doing grep 101 times, and again grep 101 times" | ./your_program.sh -E "((\w\w\w\w) (\d\d\d)) is doing \2 \3 times, and again \1 times"
+    assert!(
+        match_by_char(
+            "grep 101 is doing grep 101 times, and again grep 101 times",
+            r"((\w\w\w\w) (\d\d\d)) is doing \2 \3 times, and again \1 times",
+            false,
+            &Vec::new()
+        )
+        .0
+    )
 }
