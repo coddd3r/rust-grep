@@ -83,3 +83,10 @@ fn match_multiple_patterns() {
     assert!(match_by_char("a cat", "a (cat|dog)", false).0);
     assert!(match_by_char("a cat is", "a (cat|dog) is", false).0);
 }
+#[test]
+fn test_backreference() {
+    // assert!(match_by_char("cat and cat", r"(cat) and \1", false).0);
+    // assert!(!match_by_char("cat and dog", r"(cat) and \1", false).0);
+    // assert!(!match_by_char("cat and dog", r"(\w+) and \1", false).0);
+    assert!(match_by_char("cat and cat", r"(\w+) and \1", false).0);
+}
