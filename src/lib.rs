@@ -251,7 +251,11 @@ pub fn match_by_char(
                     if input_index >= input_len {
                         input_index += 1
                     }
-                    input_index -= std::cmp::max(num_repeats - similar_remaining_in_pattern, 1);
+                    if num_repeats > similar_remaining_in_pattern {
+                        input_index -= std::cmp::max(num_repeats - similar_remaining_in_pattern, 1);
+                    } else {
+                        input_index -= num_repeats;
+                    }
                     eprintln!("ne input:{input_index}");
                     //    * prev_pattern_len;
                 }
