@@ -2,11 +2,14 @@ use std::usize;
 
 #[cfg(test)]
 mod tests;
+
+const NULL_RETURN: (bool, Option<usize>, usize) = (false, None, 0);
+
 pub fn match_by_char(
     input_line: &str,
     pattern: &str,
     full_match_optional: bool,
-) -> (bool, Option<usize>) {
+) -> (bool, Option<usize>, usize) {
     eprintln!(
         "\n--------------\n----- fn start: MATCHING: input:{:?}, patt:{:?}",
         input_line, pattern
@@ -23,7 +26,7 @@ pub fn match_by_char(
             }
             in_res.0
         });
-        return (opt_ret, Some(use_retlen));
+        return (opt_ret, Some(use_retlen), 0);
     }
     let input_chars: Vec<char> = input_line.chars().collect();
     let mut patt_index: usize = 0;
@@ -37,14 +40,14 @@ pub fn match_by_char(
     eprintln!("input length:{input_len}, pattern len:{patt_len}, prev_pattern:{prev_pattern}");
     if pattern.is_empty() {
         eprintln!("\n\n!!!!EMPTY MATCH!!??\n");
-        return (true, Some(0));
+        return (true, Some(0), 0);
     }
 
     if patt_chars[0] == '^' {
         patt_index += 1
     }
     if pattern.chars().count() == 1 {
-        return (input_line.contains(pattern), Some(1));
+        return (input_line.contains(pattern), Some(1), 0);
     } else {
         while patt_index < patt_len && input_index < input_len {
             // eprintln!("in loop input:{input_line}, input len:{input_len}, input i:{input_index}");
@@ -100,7 +103,7 @@ pub fn match_by_char(
                         };
 
                         if !is_optional && !res {
-                            return (false, None);
+                            return NULL_RETURN;
                         }
 
                         patt_index += char_group_length + 2;
@@ -184,7 +187,7 @@ pub fn match_by_char(
                             continue;
                         } else {
                             eprintln!("returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}");
-                            return (false, None);
+                            return NULL_RETURN;
                         }
                     }
                     patt_index += 2;
@@ -266,7 +269,7 @@ pub fn match_by_char(
                     }
 
                     if num_wild_matches == 0 && one_or_more {
-                        return (false, None);
+                        return NULL_RETURN;
                     }
                     patt_index += 1;
                     continue;
@@ -372,7 +375,7 @@ pub fn match_by_char(
                                 res
                             }) {
                                 eprintln!("\n\n'(' SPLIT groups matching false for input:{input_line}, patt:{pattern}\n\n");
-                                return (false, None);
+                                return NULL_RETURN;
                             }
                         } else if patt_chars[patt_index] == '('
                             && !patt_chars[patt_index + 1..].contains(&')')
@@ -393,7 +396,7 @@ pub fn match_by_char(
                                 res.0
                             }) {
                                 eprintln!("\nSECOND SPLIT groups matching false for input:{input_line}, patt:{pattern}\n");
-                                return (false, None);
+                                return NULL_RETURN;
                             }
                             input_index += matched_input_len;
                             eprintln!(
@@ -411,7 +414,7 @@ pub fn match_by_char(
                         continue;
                     }
                     if patt_chars[patt_index] == '$' && patt_index != patt_len - 1 {
-                        return (false, None);
+                        return NULL_RETURN;
                     }
                     prev_pattern = patt_chars[patt_index..patt_index + 1]
                         .into_iter()
@@ -442,7 +445,7 @@ pub fn match_by_char(
                         "returning false in char comp input:{} patt:{} mapping, curr patter pos:{patt_index}, input pos:{input_index}",
                                 input_chars[input_index], patt_chars[patt_index]
                     );
-                            return (false, None);
+                            return NULL_RETURN;
                         }
                     }
                     if res {
@@ -465,11 +468,11 @@ pub fn match_by_char(
             "BEFORE RETURN TRUE full optional:{full_match_optional}; input:{input_line},pattern{:?} returning an input length of:{}\n\n",
             pattern, ret_len
         );
-        return (true, Some(ret_len));
+        return (true, Some(ret_len), 0);
     }
 
     if patt_index == patt_len {
-        return (true, Some(patt_len));
+        return (true, Some(patt_len), 0);
     }
     // if input fully parsed but pattern not exhausted
     if input_index == input_chars.len() {
@@ -480,7 +483,7 @@ pub fn match_by_char(
 
         eprintln!("INPUT FULLY PARSED full optional:{full_match_optional}");
         if full_match_optional {
-            return (true, Some(input_len));
+            return (true, Some(input_len), 0);
         }
         let res = patt_index >= pattern.len()
             || ((patt_index == pattern.len() - 1)
@@ -490,14 +493,14 @@ pub fn match_by_char(
                 check_optional(&remaining_patt)
             };
         eprintln!("final return: input:{input_line}, i:{input_index}, input len:{input_len}\n  patt len:{patt_len}, pattern:{pattern}, patt i:{patt_index},\nres:{res}");
-        return (res, Some(input_len));
+        return (res, Some(input_len), 0);
     };
     eprintln!("\n\n:( COP OUT TRUE");
     eprintln!(
         "input:{input_line}, pattern:{pattern}, input pos:{input_index}, patt_pos:{patt_index}"
     );
     eprintln!("input len:{input_len}, pattern len:{patt_len}, ");
-    return (false, None);
+    return NULL_RETURN;
 }
 
 fn check_optional(pattern: &str) -> bool {
