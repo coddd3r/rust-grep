@@ -210,3 +210,14 @@ fn disordered_back_ref() {
         .0
     );
 }
+
+#[test]
+fn tester_failed_2() {
+    ////echo -n "apple" | ./your_program.sh -E "[^abc]"
+    assert!(match_by_char("apple", r"[^abc]", false, &Vec::new()).0)
+}
+
+#[test]
+fn test_neg_patt_2() {
+    assert!(match_by_char("sabcyeza", r"s[^abc]+eza", false, &Vec::new()).0);
+}

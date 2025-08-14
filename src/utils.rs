@@ -91,7 +91,7 @@ pub fn get_next_pattern(pattern: &str) -> String {
                     return capt_group;
                 }
             }
-            '^' | '+' => patt_index += 1,
+            '^' | '+' | ']' | ')' => patt_index += 1,
             _ => return pattern[patt_index..patt_index + 1].to_string(),
         }
     }
