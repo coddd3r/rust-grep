@@ -17,6 +17,10 @@ fn check_optional_group() {
 }
 
 #[test]
+fn check_negative_group() {
+    assert!(match_by_char("apple", "[^xyz]", false).0);
+}
+#[test]
 fn cc_optional() {
     assert!(match_by_char("act", "ca?t", false).0);
     assert!(match_by_char("act", "ca?a?t", false).0);
@@ -35,9 +39,10 @@ fn check_wildcard() {
     assert!(match_by_char("dog", r"d.g", false).0);
     assert!(!match_by_char("2", r".[^abc]", false).0);
     assert!(!match_by_char("2", r".[abc]", false).0);
-    assert!(match_by_char("2", r".\d", false).0);
-    assert!(match_by_char("dog", r"d.g.", false).0);
-    assert!(match_by_char("dog", r".d.g.", false).0);
+    assert!(!match_by_char("2", r".\d", false).0);
+    assert!(match_by_char("22", r".\d", false).0);
+    assert!(!match_by_char("dog", r"d.g.", false).0);
+    assert!(!match_by_char("dog", r".d.g.", false).0);
     assert!(!(match_by_char("dog", r".c.g.", false).0));
     assert!(!(match_by_char("cog", r"d.g", false).0));
 }
@@ -58,10 +63,11 @@ fn failed_before_tester() {
         )
         .0
     );
-    //echo -n "caaats" | ./your_program.sh -E "ca+at"
+    ////echo -n "caaats" | ./your_program.sh -E "ca+at"
     assert!(match_by_char("caaats", "ca+at", false).0);
     assert!(match_by_char("apple", "[^xyz]", false).0);
     assert!(match_by_char("e", "[blueberry]", false).0);
+    ////echo -n "abcd is abcd, not efg" | ./your_program.sh -E "([abcd]+) is \1, not [^xyz]+"
 }
 
 #[test]
@@ -83,10 +89,19 @@ fn match_multiple_patterns() {
     assert!(match_by_char("a cat", "a (cat|dog)", false).0);
     assert!(match_by_char("a cat is", "a (cat|dog) is", false).0);
 }
+
 #[test]
 fn test_backreference() {
-    // assert!(match_by_char("cat and cat", r"(cat) and \1", false).0);
-    // assert!(!match_by_char("cat and dog", r"(cat) and \1", false).0);
+    assert!(match_by_char("cat and cat", r"(cat) and \1", false).0);
+    assert!(!match_by_char("cat and dog", r"(cat) and \1", false).0);
     assert!(!match_by_char("cat and dog", r"(\w+) and \1", false).0);
     assert!(match_by_char("cat and cat", r"(\w+) and \1", false).0);
+    assert!(
+        match_by_char(
+            "abcd is abcd, not efg",
+            r"([abcd]+) is \1, not [^xyz]+",
+            false
+        )
+        .0
+    )
 }

@@ -39,41 +39,79 @@ pub fn check_optional(pattern: &str) -> bool {
     }
 }
 
-pub fn get_next_pattern(pattern: &str) -> &str {
+pub fn get_next_pattern(pattern: &str) -> String {
     let mut patt_index: usize = 0;
     let patt_len = pattern.len();
     let patt_chars: Vec<char> = pattern.chars().collect();
 
-    match patt_chars[patt_index] {
-        '[' => {
-            let char_group_end = patt_chars[patt_index + 1..]
-                .iter()
-                .position(|c| c == &']')
-                .unwrap();
-            &pattern[patt_index..patt_index + char_group_end + 2]
-        }
-        '\\' => {
-            while (patt_index + 1) < patt_len && &pattern[patt_index + 1..patt_index + 2] == r"\" {
-                patt_index += 1;
+    while patt_index < patt_len {
+        match patt_chars[patt_index] {
+            '[' => {
+                let char_group_end = patt_chars[patt_index + 1..]
+                    .iter()
+                    .position(|c| c == &']')
+                    .unwrap();
+                return pattern[patt_index..patt_index + char_group_end + 2].to_string();
             }
-            &pattern[patt_index..patt_index + 2]
+            '\\' => {
+                while (patt_index + 1) < patt_len
+                    && &pattern[patt_index + 1..patt_index + 2] == r"\"
+                {
+                    patt_index += 1;
+                }
+                return pattern[patt_index..patt_index + 2].to_string();
+            }
+            '(' => {
+                if patt_chars[patt_index + 1..].contains(&')') {
+                    let mut num_opening: usize = 1;
+                    let mut capture_group_end = 0;
+                    let rem_chars = &patt_chars[patt_index + 1..];
+                    for (i, e) in rem_chars.iter().enumerate() {
+                        if e == &'(' {
+                            num_opening += 1;
+                        }
+                        if e == &')' {
+                            eprintln!("num opening:{num_opening}");
+                            //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
+                        }
+                        if e == &')' && num_opening == 1 {
+                            capture_group_end = i;
+                            break;
+                        }
+                        if e == &')' && num_opening > 1 {
+                            num_opening -= 1;
+                        }
+                    }
+
+                    let closing_bracket_index = patt_index + capture_group_end + 1;
+                    let capt_chars = &patt_chars[patt_index + 1..closing_bracket_index];
+                    let capt_group = capt_chars.iter().collect::<String>();
+                    return capt_group;
+                }
+            }
+            '^' | '+' => patt_index += 1,
+            _ => return pattern[patt_index..patt_index + 1].to_string(),
         }
-        _ => &pattern[patt_index..patt_index + 1],
     }
+    return String::new();
 }
 
 pub fn check_num_similar_pattern(
     patt_index: usize,
     patt_len: usize,
     prev_pattern_len: usize,
-    prev_pattern: &String,
+    prev_pattern: &str,
     patt_chars: &Vec<char>,
 ) -> usize {
     let mut check_index = patt_index + 1;
     let mut similar_remaining_in_pattern = 0;
-    eprintln!("\n________\nbefore while, check i:{check_index}, patt len:{patt_len}");
+    eprintln!(
+        "\n________\nCHECKING SIMILAR PATTERN: patt i:{check_index}, patt_chars:{:?}",
+        patt_chars
+    );
+    eprintln!("before while, check i:{check_index}, patt len:{patt_len}");
     while check_index < patt_len {
-        eprintln!("\n\n\nchecking repeat\n\n\n");
+        eprintln!("\nchecking repeat");
         //if there is an exact similar to the prev matched pattern
         if check_index + prev_pattern_len < patt_len
             && patt_chars[check_index..check_index + prev_pattern_len]

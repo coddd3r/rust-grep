@@ -35,8 +35,8 @@ pub fn match_by_char(
     let input_chars: Vec<char> = input_line.chars().collect();
     let mut patt_index: usize = 0;
     let mut input_index = 0;
-    let patt_len = pattern.len();
-    let input_len = input_line.len();
+    let patt_len = patt_chars.len();
+    let input_len = input_chars.len();
     let mut prev_pattern = String::new();
 
     // start, end, string matched
@@ -44,445 +44,454 @@ pub fn match_by_char(
 
     eprintln!("input length:{input_len}, pattern len:{patt_len}, prev_pattern:{prev_pattern}");
     if pattern.is_empty() {
-        eprintln!("\n\n!!!!EMPTY MATCH!!??\n");
-        return (true, Some(0), String::new());
+        panic!("!!!!EMPTY MATCH!!??\n");
+        //return (true, Some(0), String::new());
     }
 
+    if input_line.is_empty() {
+        panic!("!!!!EMPTY INPUT!!??\n");
+        //return NULL_RETURN;
+        //return (true, Some(0), String::new());
+    }
+    let mut starter = false;
     if patt_chars[0] == '^' {
-        patt_index += 1
+        patt_index += 1;
+        starter = true;
     }
-    if pattern.chars().count() == 1 {
-        return (input_line.contains(pattern), Some(1), String::new());
-    } else {
-        while patt_index < patt_len && input_index < input_len {
-            // eprintln!("in loop input:{input_line}, input len:{input_len}, input i:{input_index}");
-            // eprintln!("in loop, pattern:{pattern}, patt len:{patt_len}, patt i:{patt_index}");
-            //eprintln!("in loop with char{:?}", patt_chars[patt_index]);
-            // eprintln!("start of while input i:{input_index}, pattern i:{patt_index}");
-            match patt_chars[patt_index] {
-                '[' => {
-                    if patt_chars[patt_index + 1..].contains(&']') {
-                        let char_group_end = patt_chars[patt_index + 1..]
-                            .iter()
-                            .position(|c| c == &']')
-                            .unwrap();
 
-                        let char_group_length = char_group_end - patt_index;
-                        let lett_group =
-                            &patt_chars[patt_index + 1..patt_index + char_group_end + 1];
-                        prev_pattern = patt_chars[patt_index..patt_index + char_group_end + 2]
-                            .into_iter()
-                            .collect::<String>();
-                        let mut found_pos = 0;
-                        eprintln!(
-                            "checking char group of length:{char_group_length}, group:{:?}",
-                            lett_group
-                        );
+    while patt_index < patt_len && input_index < input_len {
+        // eprintln!("in loop input:{input_line}, input len:{input_len}, input i:{input_index}");
+        // eprintln!("in loop, pattern:{pattern}, patt len:{patt_len}, patt i:{patt_index}");
+        //eprintln!("in loop with char{:?}", patt_chars[patt_index]);
+        // eprintln!("start of while input i:{input_index}, pattern i:{patt_index}");
+        match patt_chars[patt_index] {
+            '[' => {
+                if patt_chars[patt_index + 1..].contains(&']') {
+                    let char_group_end = patt_chars[patt_index + 1..]
+                        .iter()
+                        .position(|c| c == &']')
+                        .unwrap();
 
-                        let optional_position = patt_index + char_group_end + 2;
-                        let is_optional =
-                            optional_position < patt_len && patt_chars[optional_position] == '?';
-
-                        let res = char_group_length > 1 && {
-                            if patt_chars[patt_index + 1] != '^' {
-                                input_chars[input_index..].iter().enumerate().any(|(i, c)| {
-                                    if lett_group.contains(&c) {
-                                        found_pos = i;
-                                        return true;
-                                    } else {
-                                        return false;
-                                    }
-                                })
-                            } else {
-                                let neg_group = &lett_group[1..];
-                                eprintln!("checking negative group:{:?}", neg_group);
-                                input_chars[input_index..].iter().enumerate().any(|(i, c)| {
-                                    if !neg_group.contains(&c) {
-                                        found_pos = i;
-                                        return true;
-                                    } else {
-                                        return false;
-                                    }
-                                })
-                            }
-                        };
-
-                        if !is_optional && !res {
-                            return NULL_RETURN;
-                        }
-
-                        patt_index += char_group_length + 2;
-                        if res {
-                            input_index += found_pos + 1;
-                        }
-                        //ignore the '?'
-                        if is_optional {
-                            patt_index += 1;
-                        }
-
-                        eprintln!(
-                            "opt:{is_optional}, found res:{res}, patt index:{patt_index}, input index:{input_index}"
-                        );
-                    }
-                }
-                '\\' => {
-                    while patt_chars[patt_index + 1] == '\\' {
-                        patt_index += 1;
-                    }
-                    let char_class = patt_chars[patt_index..patt_index + 2]
+                    let lett_group = &patt_chars[patt_index + 1..patt_index + char_group_end + 1];
+                    let char_group_length = lett_group.len();
+                    prev_pattern = patt_chars[patt_index..patt_index + char_group_end + 2]
                         .into_iter()
                         .collect::<String>();
-
-                    // FIND GROUP, MATCH GROUP
-                    if char_class.chars().nth(1).unwrap().is_digit(10) {
-                        let group_num = char_class[1..].parse::<usize>().unwrap();
-                        let group_range = &patt_capture_groups[group_num - 1];
-                        let actual_group: String = patt_chars[group_range.0 + 1..group_range.1]
-                            .iter()
-                            .collect();
-                        let rem_input: String = input_chars[input_index..].iter().collect();
-                        let num_group_res =
-                            match_by_char(&rem_input, &actual_group, full_match_optional);
-
-                        if !num_group_res.0 {
-                            return num_group_res;
-                        }
-                        let matched_len = num_group_res.1.unwrap();
-                        //patt_capture_groups[group_num - 1].2 =
-                        //    input_chars[input_index..matched_len].iter().collect();
-                        input_index += matched_len;
-                        patt_index += 2;
-                        continue;
-                    }
-                    prev_pattern = char_class.clone();
-                    eprintln!("checking char class {}", char_class);
-                    let curr_remaining = &input_line[input_index..];
                     let mut found_pos = 0;
+                    eprintln!(
+                        "checking char group of length:{char_group_length}, group:{:?}",
+                        lett_group
+                    );
+
+                    let optional_position = patt_index + char_group_end + 2;
                     let is_optional =
-                        patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?';
-                    let res = match char_class.as_str() {
-                        r"\d" => curr_remaining.chars().enumerate().any(|(i, e)| {
-                            if e.is_digit(10) {
-                                found_pos = i;
-                                return true;
-                            }
-                            return false;
-                        }),
-                        r"\w" => curr_remaining.chars().enumerate().any(|(i, e)| {
-                            if e.is_alphanumeric() || e == '_' {
-                                found_pos = i;
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        }),
-                        _ => unreachable!(),
-                    };
-                    if !res && !is_optional {
-                        eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
-                        let mut next_optional = false;
-                        if patt_len - patt_index > 2 {
-                            let patt_to_check =
-                                &patt_chars[patt_index + 1..].into_iter().collect::<String>();
-                            next_optional = check_optional(patt_to_check);
-                            eprintln!(
-                            "Patt to check: {patt_to_check}, checking next with next optional?{}",
-                            next_optional
-                        );
-                        }
-                        if next_optional {
-                            input_index += 1;
-                            continue;
+                        optional_position < patt_len && patt_chars[optional_position] == '?';
+
+                    let res = char_group_length > 1 && {
+                        if patt_chars[patt_index + 1] != '^' {
+                            input_chars[input_index..].iter().enumerate().any(|(i, c)| {
+                                if lett_group.contains(&c) {
+                                    found_pos = i;
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            })
                         } else {
-                            eprintln!("returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}");
-                            return NULL_RETURN;
+                            let neg_group = &lett_group[1..];
+                            eprintln!("checking negative group:{:?}", neg_group);
+                            input_chars[input_index..].iter().enumerate().any(|(i, c)| {
+                                if !neg_group.contains(&c) {
+                                    found_pos = i;
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            })
                         }
+                    };
+
+                    if !is_optional && !res {
+                        return NULL_RETURN;
                     }
-                    patt_index += 2;
+
+                    patt_index += char_group_length + 2;
                     if res {
                         input_index += found_pos + 1;
                     }
+                    //ignore the '?'
                     if is_optional {
                         patt_index += 1;
                     }
-                    eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
+
+                    eprintln!(
+                            "opt:{is_optional}, found res:{res}, patt index:{patt_index}, input index:{input_index}"
+                        );
                 }
-                '+' => {
-                    eprintln!("\n*************\n***********\nREPEATING PATTERN:{prev_pattern}\n\n\n***********");
-
-                    let prev_pattern_len = prev_pattern.len();
-
-                    // check how many times the prev matched
-                    // need to occur in the pattern, after repeat
-                    let mut num_repeats = 0;
-                    while input_index < input_len {
-                        let res = match_by_char(&input_line[input_index..], &prev_pattern, true);
-                        if !res.0 {
-                            break;
-                        }
-                        eprintln!("in loop res?:{}", res.0);
-                        input_index += res.1.unwrap();
-                        num_repeats += 1;
-                    }
-
-                    let similar_remaining_in_pattern = check_num_similar_pattern(
-                        patt_index,
-                        patt_len,
-                        prev_pattern_len,
-                        &prev_pattern,
-                        &patt_chars,
-                    );
-                    eprintln!("\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern}, prev_patt_len:{prev_pattern_len}");
-
-                    // if there are more of the same immediately after e.g ca+ats
-                    // move pattern pointer forward by at one
-                    // move the input index forward by at least 1 * len of prev pattern
+            }
+            '\\' => {
+                while patt_chars[patt_index + 1] == '\\' {
                     patt_index += 1;
-                    if similar_remaining_in_pattern > 0 {
-                        input_index -= std::cmp::max(num_repeats - similar_remaining_in_pattern, 1)
-                        //    * prev_pattern_len;
-                    }
-                    eprintln!("AFTER finding all similar: new input i:{input_index}\n");
-
-                    // if patt_index == patt_len {
-                    //     let actual_index = input_index - num_repeats;
-                    //     let matched_input: String = input_chars[..actual_index].iter().collect();
-                    //     let ret = (true, Some(actual_index), matched_input);
-                    //     eprintln!("repeating patt returning:{:?}", ret);
-                    //     return ret;
-                    // }
                 }
+                let char_class = patt_chars[patt_index..patt_index + 2]
+                    .into_iter()
+                    .collect::<String>();
 
-                '.' => {
-                    let mut remaining_patt =
-                        patt_chars[patt_index + 1..].into_iter().collect::<String>();
+                // FIND GROUP, MATCH GROUP
+                if char_class.chars().nth(1).unwrap().is_digit(10) {
+                    eprintln!(
+                        "\n\n\n FOUND back ref:{char_class}, groups:{:?}\n\n",
+                        patt_capture_groups
+                    );
+                    let group_num = char_class[1..].parse::<usize>().unwrap();
+                    let actual_group = &patt_capture_groups[group_num - 1].2;
+                    let rem_input: String = input_chars[input_index..].iter().collect();
+                    let num_group_res =
+                        match_by_char(&rem_input, actual_group, full_match_optional);
 
-                    let mut next_patt = get_next_pattern(&remaining_patt);
-                    eprintln!("next patt:{}", next_patt);
-                    let mut one_or_more = false;
-                    //let mut any_or_more = false;
-                    if ["+", "*"].contains(&next_patt) {
-                        one_or_more = next_patt == "+";
-                        //any_or_more = next_patt == "*";
-                        patt_index += 1;
-                        remaining_patt =
-                            patt_chars[patt_index + 1..].into_iter().collect::<String>();
-                        next_patt = get_next_pattern(&remaining_patt);
+                    if !num_group_res.0 {
+                        return num_group_res;
                     }
-                    let mut num_wild_matches = 0;
-                    while input_index < input_len
-                        && !match_by_char(
-                            &input_chars[input_index..input_index + 1]
-                                .into_iter()
-                                .collect::<String>(),
-                            next_patt,
-                            false,
-                        )
-                        .0
-                    {
+                    let matched_len = num_group_res.1.unwrap();
+                    //patt_capture_groups[group_num - 1].2 =
+                    //    input_chars[input_index..matched_len].iter().collect();
+                    input_index += matched_len;
+                    patt_index += 2;
+                    continue;
+                }
+                prev_pattern = char_class.clone();
+                eprintln!("checking char class {}", char_class);
+                let curr_remaining = &input_line[input_index..];
+                let mut found_pos = 0;
+                let is_optional = patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?';
+                let res = match char_class.as_str() {
+                    r"\d" => curr_remaining.chars().enumerate().any(|(i, e)| {
+                        if e.is_digit(10) {
+                            found_pos = i;
+                            return true;
+                        }
+                        return false;
+                    }),
+                    r"\w" => curr_remaining.chars().enumerate().any(|(i, e)| {
+                        if e.is_alphanumeric() || e == '_' {
+                            found_pos = i;
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }),
+                    _ => unreachable!(),
+                };
+                if !res && !is_optional {
+                    eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
+                    let mut next_optional = false;
+                    if patt_len - patt_index > 2 {
+                        let patt_to_check =
+                            &patt_chars[patt_index + 1..].into_iter().collect::<String>();
+                        next_optional = check_optional(patt_to_check);
+                        eprintln!(
+                            "Patt to check: {patt_to_check}, checking next with next optional?{}",
+                            next_optional
+                        );
+                    }
+                    if next_optional {
                         input_index += 1;
-                        num_wild_matches += 1;
-                    }
-
-                    if num_wild_matches == 0 && one_or_more {
+                        continue;
+                    } else {
+                        eprintln!("returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}");
                         return NULL_RETURN;
                     }
+                }
+                patt_index += 2;
+                if res {
+                    input_index += found_pos + 1;
+                }
+                if is_optional {
+                    patt_index += 1;
+                }
+                eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
+            }
+            '+' => {
+                eprintln!("\n*************\n***********\nREPEATING PATTERN:{prev_pattern}\n\n\n***********");
+
+                let prev_pattern_len = prev_pattern.len();
+
+                // check how many times the prev matched
+                // need to occur in the pattern, after repeat
+                let mut num_repeats = 0;
+                while input_index < input_len {
+                    let use_patt = format!("^{prev_pattern}");
+                    let use_input = &input_chars[input_index..].iter().collect::<String>();
+                    eprintln!("\n\ncalling repeat,input chars:{:?} input i:{input_index} using input:{:?}, input length{:?}",input_chars, use_input, input_len);
+                    let res = match_by_char(&use_input, &use_patt, true);
+                    if !res.0 {
+                        break;
+                    }
+                    eprintln!("in loop res?:{:?}", res);
+                    eprintln!("in loop input i?:{:?}", input_index);
+                    input_index += res.1.unwrap();
+                    num_repeats += 1;
+                }
+
+                let similar_remaining_in_pattern = check_num_similar_pattern(
+                    patt_index,
+                    patt_len,
+                    prev_pattern_len,
+                    &prev_pattern,
+                    &patt_chars,
+                );
+                eprintln!("\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern}, prev_patt_len:{prev_pattern_len}");
+
+                // if there are more of the same immediately after e.g ca+ats
+                // move pattern pointer forward by at one
+                // move the input index forward by at least 1 * len of prev pattern
+                patt_index += 1;
+                eprintln!("original input i before subtr similar:{input_index}");
+                if similar_remaining_in_pattern > 0 {
+                    if input_index >= input_len {
+                        input_index += 1
+                    }
+                    input_index -= std::cmp::max(num_repeats - similar_remaining_in_pattern, 1);
+                    eprintln!("ne input:{input_index}");
+                    //    * prev_pattern_len;
+                }
+                eprintln!("AFTER finding all similar: new input i:{input_index}, pattern i:{patt_index}\n");
+            }
+
+            '.' => {
+                prev_pattern = ".".to_string();
+                patt_index += 1;
+                input_index += 1;
+                continue;
+            }
+
+            '(' => {
+                // queue the groups waiting to have their capture field populated
+                let mut waiting_groups: Vec<usize> = Vec::new();
+                if patt_chars[patt_index + 1..].contains(&')') {
+                    patt_capture_groups.push((patt_index, 0, String::new()));
+                    waiting_groups.push(0);
+                    let mut num_opening: usize = 1;
+                    let mut capture_group_end = 0;
+                    let rem_chars = &patt_chars[patt_index + 1..];
+                    for (i, e) in rem_chars.iter().enumerate() {
+                        if e == &'(' {
+                            patt_capture_groups.push((patt_index + 1 + i, 0, String::new()));
+                            num_opening += 1;
+                        }
+                        if e == &')' {
+                            eprintln!("num opening:{num_opening}");
+                            let zero_pos = patt_capture_groups.iter().rev().position(|e| e.1 == 0);
+                            let num_groups = patt_capture_groups.len();
+                            patt_capture_groups[num_groups - zero_pos.unwrap() - 1].1 =
+                                patt_index + 1 + i;
+                            //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
+                        }
+                        if e == &')' && num_opening == 1 {
+                            capture_group_end = i;
+                            break;
+                        }
+                        if e == &')' && num_opening > 1 {
+                            num_opening -= 1;
+                        }
+                    }
+
+                    eprintln!("\nCAPT GROUPS:{:?}\n", patt_capture_groups);
+
+                    let start_capt_input = input_index;
+                    let closing_bracket_index = patt_index + capture_group_end + 1;
+                    let capt_chars = &patt_chars[patt_index + 1..closing_bracket_index];
+                    let capt_group = capt_chars.iter().collect::<String>();
+
+                    if capt_chars[capt_chars.len() - 1] == '+' {
+                        let similar_in_patt = check_num_similar_pattern(
+                            closing_bracket_index,
+                            patt_len,
+                            capt_group.len() - 1,
+                            &capt_group[..capt_group.len() - 1],
+                            &patt_chars,
+                        );
+                        eprintln!("\n\n GROUP SIMILAR in patt:{similar_in_patt}");
+                    }
+                    eprintln!("\n input index:{input_index}, patt_index:{patt_index},capt group:{capt_group}");
+
+                    let group_optional = patt_len > closing_bracket_index
+                        && patt_chars[closing_bracket_index] == '?';
+                    eprintln!("GROUP optional?{group_optional}");
+                    let split_char = {
+                        if capt_group.contains('(') {
+                            eprintln!("splitting by )");
+                            '('
+                        } else {
+                            '|'
+                        }
+                    };
+                    eprintln!("USING SPLIT CHAR:{split_char}");
+
+                    let mut matched_input_len = 0;
+                    if split_char == '(' {
+                        eprintln!("IN '(' SPLIT");
+                        eprintln!("in layers groups");
+                        let split_groups: Vec<_> = capt_group.split(split_char).collect();
+                        if !split_groups.iter().all(|e| {
+                            eprintln!("\nmatching SPLIT group:{e}");
+                            let sub_groups: Vec<_> = e.split(')').collect();
+                            let res = sub_groups.iter().enumerate().all(|(x, sub_gr)| {
+                                eprintln!("\nmatching SUBGROUP:{sub_gr}");
+                                let next_subgroup = if x + 1 < sub_groups.len() {
+                                    sub_groups[x + 1]
+                                } else {
+                                    ""
+                                };
+                                let sub_group_optional =
+                                    x + 1 < sub_groups.len() && next_subgroup == "?";
+
+                                eprintln!(
+                                    "SUB optional?{sub_group_optional}, next grp:{next_subgroup}",
+                                );
+
+                                if sub_gr == &"?" || sub_gr.is_empty() {
+                                    return true;
+                                }
+
+                                let use_patt = format!("{sub_gr}");
+                                let sub_group_res =
+                                    match_by_char(&input_line[input_index..], &use_patt, true);
+
+                                if !sub_group_res.0 {
+                                    eprintln!("\nsub group:{sub_gr} NOT found\n");
+                                } else {
+                                    eprintln!("\nsub group:{sub_gr} FOUND\n");
+                                }
+
+                                if sub_group_optional && !sub_group_res.0 {
+                                    eprintln!("\nsubgroup NOT found but OPTIONAL");
+                                    return true;
+                                }
+
+                                if sub_group_res.0 {
+                                    eprintln!(
+                                        "moving input forward by {}",
+                                        sub_group_res.1.unwrap()
+                                    );
+                                    input_index += sub_group_res.1.unwrap();
+                                    matched_input_len = sub_group_res.1.unwrap();
+                                }
+
+                                eprintln!("\n\nSUB GROUP:{e}, returning:{}\n\n", sub_group_res.0);
+                                sub_group_res.0
+                            });
+                            eprintln!("\n\nSPLIT GROUP:{e}, returning:{res}\n\n");
+                            res
+                        }) {
+                            eprintln!("\n\n'(' SPLIT groups matching false for input:{input_line}, patt:{pattern}\n\n");
+                            return NULL_RETURN;
+                        }
+                    } else if patt_chars[patt_index] == '('
+                        && !patt_chars[patt_index + 1..].contains(&')')
+                    {
+                        //TODO: handle straggler (
+                        patt_index += 1;
+                        continue;
+                    } else {
+                        eprintln!("\n\nIN SECOND SPLIT\n");
+                        let mut split_groups = capt_group.split(split_char);
+
+                        if !split_groups.any(|e| {
+                            eprintln!("matching GROUP:{e}");
+                            let res = match_by_char(&input_line[input_index..], e, true);
+                            if res.0 {
+                                matched_input_len = res.1.unwrap();
+                            }
+                            eprintln!("\n\nGROUP RESULT:{:?}", res);
+                            res.0
+                        }) {
+                            eprintln!("\nSECOND SPLIT groups matching false for input:{input_line}, patt:{pattern}\n");
+                            return NULL_RETURN;
+                        }
+                        eprintln!("group return matched len:{matched_input_len}");
+
+                        input_index += matched_input_len;
+                        eprintln!(
+                            "AFTER MULTIPLE input index:{input_index}, patt_index:{patt_index}"
+                        );
+                    }
+                    patt_index += capt_group.len() + 2;
+                    let captured_input: String =
+                        input_chars[start_capt_input..input_index].iter().collect();
+                    eprintln!("\n\n\nCAPTURED:{captured_input} for pattern:{capt_group}");
+                    patt_capture_groups[0].2 = captured_input;
+                    eprintln!("input:{input_line}, input i:{input_index}, pattern:{pattern}, patt i:{patt_index}");
+                    prev_pattern = capt_group;
+                }
+            }
+
+            _ => {
+                if ['?'].contains(&patt_chars[patt_index]) {
                     patt_index += 1;
                     continue;
                 }
-
-                '(' => {
-                    patt_capture_groups.push((patt_index, 0, String::new()));
-                    if patt_chars[patt_index + 1..].contains(&')') {
-                        let mut num_opening: usize = 1;
-                        let mut capture_group_end = 0;
-                        let rem_chars = &patt_chars[patt_index + 1..];
-                        for (i, e) in rem_chars.iter().enumerate() {
-                            if e == &'(' {
-                                patt_capture_groups.push((patt_index + 1 + i, 0, String::new()));
-                                num_opening += 1;
-                            }
-                            if e == &')' {
-                                eprintln!("num opening:{num_opening}");
-                                let zero_pos =
-                                    patt_capture_groups.iter().rev().position(|e| e.1 == 0);
-                                let num_groups = patt_capture_groups.len();
-                                patt_capture_groups[num_groups - zero_pos.unwrap() - 1].1 =
-                                    patt_index + 1 + i;
-                                //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
-                            }
-                            if e == &')' && num_opening == 1 {
-                                capture_group_end = i;
-                                break;
-                            }
-                            if e == &')' && num_opening > 1 {
-                                num_opening -= 1;
-                            }
-                        }
-
-                        eprintln!("\nCAPT GROUPS:{:?}\n", patt_capture_groups);
-
-                        let start_capt_input = input_index;
-                        let closing_bracket_index = patt_index + capture_group_end + 1;
-                        let capt_group = patt_chars[patt_index + 1..closing_bracket_index]
-                            .into_iter()
-                            .collect::<String>();
-                        eprintln!("\n input index:{input_index}, patt_index:{patt_index},capt group:{capt_group}");
-
-                        let group_optional = patt_len > closing_bracket_index
-                            && patt_chars[closing_bracket_index] == '?';
-                        eprintln!("GROUP optional?{group_optional}");
-                        let split_char = {
-                            if capt_group.contains('(') {
-                                eprintln!("splitting by )");
-                                '('
-                            } else {
-                                '|'
-                            }
-                        };
-                        eprintln!("USING SPLIT CHAR:{split_char}");
-
-                        let mut matched_input_len = 0;
-                        if split_char == '(' {
-                            eprintln!("IN '(' SPLIT");
-                            eprintln!("in layers groups");
-                            let split_groups: Vec<_> = capt_group.split(split_char).collect();
-                            if !split_groups.iter().all(| e| {
-                                eprintln!("\nmatching SPLIT group:{e}");
-                                let sub_groups: Vec<_> = e.split(')').collect();
-                                let res = sub_groups.iter().enumerate().all(|(x,sub_gr)| {
-                                    eprintln!("\nmatching SUBGROUP:{sub_gr}");
-                                    let next_subgroup = if  x + 1 < sub_groups.len() {sub_groups[x + 1]} else {""};
-                                    let sub_group_optional =
-                                        x + 1 < sub_groups.len() && next_subgroup == "?";
-
-                                    eprintln!("SUB optional?{sub_group_optional}, next grp:{next_subgroup}",);
-
-                                    if sub_gr == &"?" || sub_gr.is_empty() {
-                                        return true;
-                                    }
-
-                                    let use_patt = format!("{sub_gr}");
-                                    let sub_group_res =
-                                        match_by_char(&input_line[input_index..], &use_patt, true);
-
-                                    if !sub_group_res.0 {
-                                        eprintln!("\nsub group:{sub_gr} NOT found\n");
-                                    } else{
-                                        eprintln!("\nsub group:{sub_gr} FOUND\n");
-                                    }
-
-                                    if sub_group_optional && !sub_group_res.0 {
-                                        eprintln!("\nsubgroup NOT found but OPTIONAL");
-                                        return true;
-                                    }
-
-                                    if sub_group_res.0 {
-                                        eprintln!(
-                                            "moving input forward by {}",
-                                            sub_group_res.1.unwrap()
-                                        );
-                                        input_index += sub_group_res.1.unwrap();
-                                        matched_input_len = sub_group_res.1.unwrap();
-                                    }
-
-                                    eprintln!("\n\nSUB GROUP:{e}, returning:{}\n\n", sub_group_res.0);
-                                    sub_group_res.0
-                                });
-                                eprintln!("\n\nSPLIT GROUP:{e}, returning:{res}\n\n");
-                                res
-                            }) {
-                                eprintln!("\n\n'(' SPLIT groups matching false for input:{input_line}, patt:{pattern}\n\n");
-                                return NULL_RETURN;
-                            }
-                        } else if patt_chars[patt_index] == '('
-                            && !patt_chars[patt_index + 1..].contains(&')')
-                        {
-                            //TODO: handle straggler (
-                            patt_index += 1;
-                            continue;
-                        } else {
-                            eprintln!("\n\nIN SECOND SPLIT\n");
-                            let mut split_groups = capt_group.split(split_char);
-
-                            if !split_groups.any(|e| {
-                                eprintln!("matching GROUP:{e}");
-                                let res = match_by_char(&input_line[input_index..], e, true);
-                                if res.0 {
-                                    matched_input_len = res.1.unwrap();
-                                }
-                                eprintln!("\n\nGROUP RESULT:{:?}", res);
-                                res.0
-                            }) {
-                                eprintln!("\nSECOND SPLIT groups matching false for input:{input_line}, patt:{pattern}\n");
-                                return NULL_RETURN;
-                            }
-                            eprintln!("group return matched len:{matched_input_len}");
-
-                            input_index += matched_input_len;
-                            eprintln!(
-                                "AFTER MULTIPLE input index:{input_index}, patt_index:{patt_index}"
-                            );
-                        }
-                        patt_index += capt_group.len() + 2;
-                        let captured_input: String =
-                            input_chars[start_capt_input..input_index].iter().collect();
-                        eprintln!("\n\n\nCAPTURED:{captured_input} for pattern:{capt_group}");
-                        eprintln!("input:{input_line}, input i:{input_index}, pattern:{pattern}, patt i:{patt_index}");
-                        prev_pattern = capt_group;
-                    }
+                if patt_chars[patt_index] == '$' && patt_index != patt_len - 1 {
+                    eprintln!("FALSE END");
+                    return NULL_RETURN;
                 }
+                prev_pattern = patt_chars[patt_index..patt_index + 1]
+                    .into_iter()
+                    .collect::<String>();
+                let is_optional = patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?';
+                let res = patt_chars[patt_index] == input_chars[input_index];
 
-                _ => {
-                    if ['?'].contains(&patt_chars[patt_index]) {
-                        patt_index += 1;
-                        continue;
-                    }
-                    if patt_chars[patt_index] == '$' && patt_index != patt_len - 1 {
-                        return NULL_RETURN;
-                    }
-                    prev_pattern = patt_chars[patt_index..patt_index + 1]
-                        .into_iter()
-                        .collect::<String>();
-                    let is_optional =
-                        patt_index + 1 < patt_len && patt_chars[patt_index + 1] == '?';
-                    let res = patt_chars[patt_index] == input_chars[input_index];
-
-                    //if char is not found but the next part of the pattern is optional
-                    if !res && !is_optional {
-                        eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
-                        let mut next_optional = false;
-                        //if the next part of the pattern is optional
-                        if patt_len - patt_index > 2 {
-                            let remaining_patt =
-                                patt_chars[patt_index + 1..].into_iter().collect::<String>();
-                            next_optional = check_optional(&remaining_patt);
-                            eprintln!(
+                //if char is not found but the next part of the pattern is optional
+                if !res && !is_optional {
+                    eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
+                    let mut next_optional = false;
+                    //if the next part of the pattern is optional
+                    if patt_len - patt_index > 2 {
+                        let remaining_patt =
+                            patt_chars[patt_index + 1..].into_iter().collect::<String>();
+                        next_optional = check_optional(&remaining_patt);
+                        eprintln!(
                             "Patt to check: {remaining_patt}, checking next with next optional?{}",
                             next_optional
                         );
-                        }
-                        if next_optional {
-                            input_index += 1;
-                            continue;
-                        } else {
-                            eprintln!(
+                    }
+                    if next_optional {
+                        input_index += 1;
+                        continue;
+                    } else {
+                        eprintln!(
                         "returning false in char comp input:{} patt:{} mapping, curr patter pos:{patt_index}, input pos:{input_index}",
                                 input_chars[input_index], patt_chars[patt_index]
                     );
-                            return NULL_RETURN;
-                        }
+                        return NULL_RETURN;
                     }
-                    if res {
-                        input_index += 1;
-                    }
-                    if is_optional {
-                        patt_index += 1;
-                    }
-
+                }
+                if res {
+                    input_index += 1;
+                }
+                if is_optional {
                     patt_index += 1;
                 }
+
+                patt_index += 1;
             }
+        }
+    }
+
+    if starter && input_chars.len() > 1 {
+        let next_patt = get_next_pattern(pattern);
+        //let next_patt = get_next_pattern(&patt_chars[next_patt.len()..].iter().collect::<String>());
+        eprintln!("\n\n\nCHECKING STARTER: next:{next_patt}");
+
+        if !(match_by_char(
+            &input_chars[0..1].iter().collect::<String>(),
+            &next_patt,
+            full_match_optional,
+        )
+        .0)
+        {
+            eprintln!("STARTERT false");
+            return NULL_RETURN;
         }
     }
 
@@ -492,13 +501,16 @@ pub fn match_by_char(
     if full_match_optional && patt_index == pattern.len() {
         let ret_len = input_index;
         eprintln!(
-            "BEFORE RETURN TRUE full optional:{full_match_optional}; input:{input_line},pattern{:?} returning an input length of:{}\n\n",
+            "BEFORE RETURN TRUE full optional:{full_match_optional}; input:{input_line},pattern{:?} returning an input length of:{}",
             pattern, ret_len
         );
-        return (true, Some(ret_len), matched_input);
+        let ret = (true, Some(ret_len), matched_input);
+        eprintln!("returning:{:?}", ret);
+        return ret;
     }
 
     if patt_index == patt_len {
+        eprintln!("returning TRUE patt fully parsed");
         return (true, Some(input_index), matched_input);
     }
     // if input fully parsed but pattern not exhausted
@@ -512,9 +524,8 @@ pub fn match_by_char(
         if full_match_optional {
             return (true, Some(input_len), matched_input);
         }
-        let res = patt_index >= pattern.len()
-            || ((patt_index == pattern.len() - 1)
-                && ['$', '?', '.'].contains(&patt_chars[patt_index]))
+        let res = patt_index >= patt_len
+            || ((patt_index == patt_len - 1) && ['$', '?'].contains(&patt_chars[patt_index]))
             || patt_len - patt_index > 1 && {
                 let remaining_patt = patt_chars[patt_index..].into_iter().collect::<String>();
                 check_optional(&remaining_patt)
