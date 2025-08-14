@@ -116,3 +116,15 @@ fn test_backreference() {
         .0
     )
 }
+
+#[test]
+fn multiple_backref() {
+    assert!(
+        match_by_char(
+            "3 red squares and 3 red circles",
+            r"(\d+) (\w+) squares and \1 \2 circles",
+            false
+        )
+        .0
+    )
+}

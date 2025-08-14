@@ -257,7 +257,6 @@ pub fn match_by_char(
                         input_index -= num_repeats;
                     }
                     eprintln!("ne input:{input_index}");
-                    //    * prev_pattern_len;
                 }
                 eprintln!("AFTER finding all similar: new input i:{input_index}, pattern i:{patt_index}\n");
             }
@@ -424,7 +423,16 @@ pub fn match_by_char(
                     let captured_input: String =
                         input_chars[start_capt_input..input_index].iter().collect();
                     eprintln!("\n\n\nCAPTURED:{captured_input} for pattern:{capt_group}");
-                    patt_capture_groups[0].2 = captured_input;
+
+                    // check for the capture group that ends at the prev index
+                    // assign it the captured input
+                    for cg in &mut patt_capture_groups {
+                        if cg.1 + 1 == patt_index {
+                            cg.2 = captured_input.clone();
+                            break;
+                        }
+                    }
+                    //patt_capture_groups[0].2 = captured_input;
                     eprintln!("input:{input_line}, input i:{input_index}, pattern:{pattern}, patt i:{patt_index}");
                     prev_pattern = capt_group;
                 }
