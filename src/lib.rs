@@ -633,6 +633,7 @@ pub fn match_by_char(
         //OR pattern fully parsed
         //OR pattern is optional/end marker
         //OR the remaining pattern is optional
+        //or remainder is '?' or '*' followed by '$'
 
         eprintln!("INPUT FULLY PARSED full optional:{full_match_optional}");
         if full_match_optional {
@@ -643,8 +644,12 @@ pub fn match_by_char(
             || ((patt_index == patt_len - 1)
                 && ['$', '?', '+', '*'].contains(&patt_chars[patt_index]))
             || patt_len - patt_index > 1 && {
-                let remaining_patt = patt_chars[patt_index..].into_iter().collect::<String>();
-                check_optional(&remaining_patt)
+                let remaining_chars = &patt_chars[patt_index..];
+                let remaining_patt = remaining_chars.into_iter().collect::<String>();
+                remaining_chars.len() == 2
+                    && ['?', '*'].contains(&remaining_chars[0])
+                    && ['$'].contains(&remaining_chars[1])
+                    || check_optional(&remaining_patt)
             };
         eprintln!("final return: input:{input_line}, i:{input_index}, input len:{input_len}\n  patt len:{patt_len}, pattern:{:#?}, patt i:{patt_index},\nres:{res}", pattern);
         return (res, Some(input_len), matched_input);

@@ -25,7 +25,7 @@ fn main() {
         let multiple_lines = len_args > 4;
         let _ = all_args.nth(2); //consume first 3
 
-        eprintln!("nefore while all args:{:?}", all_args);
+        eprintln!("before while all args:{:?}", all_args);
         while let Some(f) = &all_args.next() {
             eprintln!("\n\n=====checking file:{f}=======");
             let input_file = std::env::current_dir().unwrap().join(&f);
