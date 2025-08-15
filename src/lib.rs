@@ -71,7 +71,7 @@ pub fn match_by_char(
     while patt_index < patt_len && input_index < input_len {
         eprintln!(
             "in loop input:{input_line}, input len:{input_len}, input i:{input_index}, char:{:?}",
-            patt_chars[patt_index]
+            input_chars[input_index]
         );
         eprintln!(
             "in loop, pattern:{pattern}, patt len:{patt_len}, patt i:{patt_index}, char:{:?}",
@@ -519,13 +519,14 @@ pub fn match_by_char(
             }
 
             '$' => {
-                eprintln!("found end, input i:{input_index}, input len:{input_len}");
-                if input_index != input_len - 1 {
-                    eprintln!("FALSE END");
-                    return NULL_RETURN;
-                }
-                eprintln!("RETURNING AT END");
-                return (true, Some(input_len), input_line.to_string());
+                patt_index += 1;
+                // eprintln!("found end, input i:{input_index}, input len:{input_len}");
+                // if input_index != input_len {
+                //     eprintln!("FALSE END");
+                //     return NULL_RETURN;
+                // }
+                // eprintln!("RETURNING AT END");
+                // return (true, Some(input_len), input_line.to_string());
             }
 
             _ => {
@@ -622,7 +623,7 @@ pub fn match_by_char(
         return ret;
     }
 
-    if patt_index == patt_len && patt_chars.last().unwrap() != &'$' {
+    if patt_index == patt_len && patt_chars[patt_len - 1] != '$' {
         eprintln!("returning TRUE patt fully parsed input i:{input_index}, input len:{input_len}");
         return (true, Some(input_index), matched_input);
     }

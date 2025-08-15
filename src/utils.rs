@@ -149,6 +149,9 @@ pub fn check_num_similar_pattern(
         let prev_pattern_len = prev_pattern.len();
         eprintln!("\nchecking repeat with next pattern:{next_pattern}");
 
+        if next_pattern == "$" {
+            break;
+        }
         // handle checking repeats in capture groups
         if next_pattern.chars().nth(0).unwrap() == '\\' {
             eprintln!("\n\n\n\n\n\n****SIMILAR CAPTURE: with capt:{next_pattern}");

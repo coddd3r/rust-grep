@@ -228,3 +228,17 @@ fn file_fails() {
     assert!(match_by_char("watermelon", ".+melon", false, &Vec::new()).0);
     assert!(match_by_char("pineapple", "pi.+$", false, &Vec::new()).0);
 }
+
+#[test]
+fn failed_3() {
+    //// echo -n "apple pie is made of apple and pie. love apple pies" | ./your_program.sh -E "^((\w+) (pie)) is made of \2 and \3. love \1$"
+    assert!(
+        !match_by_char(
+            "apple pie is made of apple and pie. love apple pies",
+            r"^((\w+) (pie)) is made of \2 and \3. love \1$",
+            false,
+            &Vec::new()
+        )
+        .0
+    );
+}
