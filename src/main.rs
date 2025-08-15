@@ -18,6 +18,7 @@ fn main() {
 
     let pattern = env::args().nth(2).unwrap();
 
+    let mut res = false;
     if let Some(a) = all_args.nth(3) {
         let input_file = std::env::current_dir().unwrap().join(&a);
         if input_file.exists() {
@@ -27,21 +28,21 @@ fn main() {
             reader.lines().for_each(|l| {
                 if let Ok(input_line) = l {
                     //eprintln!("for line:{input_line}");
-                    let res = match_by_char(&input_line, &pattern, false, &Vec::new());
-                    if res.0 {
+                    res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
+                    if res {
                         println!("{input_line}");
                     }
                 }
             });
         }
-        return;
+    } else {
+        let mut input_line = String::new();
+
+        io::stdin().read_line(&mut input_line).unwrap();
+        res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
     }
 
-    let mut input_line = String::new();
-
-    io::stdin().read_line(&mut input_line).unwrap();
-    let res = match_by_char(&input_line, &pattern, false, &Vec::new());
-    if res.0 {
+    if res {
         eprintln!("SUCCESS");
         process::exit(0)
     } else {
