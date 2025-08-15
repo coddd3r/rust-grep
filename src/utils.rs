@@ -300,7 +300,7 @@ pub fn get_paths(dir: PathBuf) -> Vec<PathBuf> {
     all_paths
 }
 
-pub fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str) -> bool {
+pub fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str, is_dir: bool) -> bool {
     let mut res = false;
     let input_file = &f;
     if input_file.exists() {
@@ -314,8 +314,10 @@ pub fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str) -> bool {
                 eprintln!("\n~~~~~~for line:{input_line}");
                 let curr_res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
                 if curr_res {
-                    if multiple_files {
+                    if is_dir {
                         print!("{}:", f.to_str().unwrap());
+                    } else if multiple_files {
+                        print!("{}:", f.file_name().unwrap().to_string_lossy());
                     }
                     println!("{input_line}");
                 }

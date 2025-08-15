@@ -38,7 +38,7 @@ fn main() {
     if len_args > 3 {
         eprintln!("file args");
         let multiple_files = len_args > 4;
-
+        let mut is_dir = false;
         let mut all_paths: Vec<PathBuf> = Vec::new();
         if recursion_found {
             let z = env::args().nth(pat_pos + 1).unwrap();
@@ -47,6 +47,7 @@ fn main() {
             if first_path.metadata().unwrap().is_dir() {
                 all_paths = get_paths(first_path.to_path_buf());
             }
+            is_dir = true;
         } else {
             let _ = all_args.nth(2); //consume first 3
             eprintln!("before while all args:{:?}", all_args);
@@ -59,7 +60,7 @@ fn main() {
 
         all_paths
             .iter()
-            .for_each(|p| res = parse_file(p, multiple_files, &pattern) || res);
+            .for_each(|p| res = parse_file(p, multiple_files, &pattern, is_dir) || res);
         eprintln!("ALL FILES:{all_paths:?}")
     } else {
         let mut input_line = String::new();
