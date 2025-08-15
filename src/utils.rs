@@ -163,12 +163,23 @@ pub fn check_num_similar_pattern(
         }
 
         //if there is an exact similar to the prev matched pattern
+        let opt_index = check_index + next_pattern.len();
+        let opt_pattern = opt_index < patt_chars.len()
+            && get_next_pattern(&patt_chars[opt_index..].iter().collect::<String>()) == "?";
+
+        // ignore optional patterns
+        if opt_pattern {
+            check_index += prev_pattern_len;
+            continue;
+        }
+
         if next_pattern == *prev_pattern {
             eprintln!("checking full patt");
             check_index += prev_pattern_len;
             similar_remaining_in_pattern += 1;
             continue;
         }
+
         // if the next char in the pattern matches the pattern also e.g "\d" and '2'
         if match_by_char(&next_pattern, &prev_pattern, false, patt_capture_groups).0 {
             eprintln!("checking one patt char");

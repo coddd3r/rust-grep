@@ -269,17 +269,14 @@ pub fn match_by_char(
                 // move the input index forward by at least 1
                 // or as many as possible while still satisfying the rest of the pattern
                 patt_index += 1;
-                eprintln!("original input i before subtr similar:{input_index}");
+                if similar_remaining_in_pattern > num_repeats {
+                    eprintln!("REMAINING pattern has too many subpatterns");
+                    return NULL_RETURN;
+                }
+
                 if similar_remaining_in_pattern > 0 {
-                    if input_index >= input_len {
-                        input_index += 1
-                    }
-                    if num_repeats > similar_remaining_in_pattern {
-                        input_index -= std::cmp::max(num_repeats - similar_remaining_in_pattern, 1);
-                    } else {
-                        input_index -= num_repeats;
-                    }
-                    eprintln!("ne input:{input_index}");
+                    input_index -= similar_remaining_in_pattern;
+                    eprintln!("new input index:{input_index}");
                 }
                 eprintln!("AFTER finding all similar: new input i:{input_index}, pattern i:{patt_index}\n");
             }
@@ -550,10 +547,8 @@ pub fn match_by_char(
                         let remaining_patt =
                             patt_chars[patt_index + 1..].into_iter().collect::<String>();
                         next_optional = check_optional(&remaining_patt);
-                        eprintln!(
-                            "Patt to check:{remaining_patt});
-                eprintln!( checking next optional?{next_optional}"
-                        );
+                        eprintln!("Patt to check:{remaining_patt}");
+                        eprintln!("checking next optional?{next_optional}");
                     }
 
                     if next_optional {
