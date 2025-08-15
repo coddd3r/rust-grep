@@ -226,4 +226,5 @@ fn test_neg_patt_2() {
 #[test]
 fn file_fails() {
     assert!(match_by_char("watermelon", ".+melon", false, &Vec::new()).0);
+    assert!(match_by_char("pineapple", "pi.+$", false, &Vec::new()).0);
 }

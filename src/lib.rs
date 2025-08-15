@@ -518,6 +518,15 @@ pub fn match_by_char(
                 }
             }
 
+            '$' => {
+                eprintln!("found end, input i:{input_index}, input len:{input_len}");
+                if input_index != input_len - 1 {
+                    eprintln!("FALSE END");
+                    return NULL_RETURN;
+                }
+                eprintln!("RETURNING AT END");
+                return (true, Some(input_len), input_line.to_string());
+            }
             _ => {
                 if ['?'].contains(&patt_chars[patt_index]) {
                     patt_index += 1;
@@ -551,7 +560,10 @@ pub fn match_by_char(
                         eprintln!("checking next optional?{next_optional}");
                     }
 
-                    if next_optional {
+                    if next_optional
+                        || (patt_index + 1 < patt_len
+                            && ['?', '+', '$'].contains(&patt_chars[patt_index + 1]))
+                    {
                         input_index += 1;
                         continue;
                     } else {

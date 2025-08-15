@@ -26,7 +26,7 @@ fn main() {
         }
 
         while let Some(input_file) = &all_args.next() {
-            eprintln!("checking file:{input_file}");
+            eprintln!("\n\n=====checking file:{input_file}=======");
             let input_file = std::env::current_dir().unwrap().join(&input_file);
             if input_file.exists() {
                 let file = File::open(input_file).unwrap();
@@ -34,7 +34,7 @@ fn main() {
 
                 reader.lines().for_each(|l| {
                     if let Ok(input_line) = l {
-                        //eprintln!("for line:{input_line}");
+                        eprintln!("\n~~~~~~for line:{input_line}");
                         let curr_res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
                         if curr_res {
                             println!("{input_line}");
