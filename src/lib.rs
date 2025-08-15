@@ -14,10 +14,10 @@ pub fn match_by_char(
     full_match_optional: bool,
     passed_groups: &Vec<(usize, usize, String)>,
 ) -> (bool, Option<usize>, String) {
-    eprintln!(
-        "\n--------------\n----- fn start: MATCHING: input:{:?}, patt:{:?}, full optional?{full_match_optional}",
-        input_line, pattern
-    );
+    //eprintln!(
+    //    "\n--------------\n----- fn start: MATCHING: input:{:?}, patt:{:?}, full optional?{full_match_optional}",
+    //    input_line, pattern
+    //);
 
     let mut patt_capture_groups: Vec<(usize, usize, String)> = Vec::new();
     // pass capture groups for each recursion
@@ -50,7 +50,7 @@ pub fn match_by_char(
     let mut waiting_groups: Vec<usize> = Vec::new();
     // start, end, string matched
 
-    eprintln!("input length:{input_len}, pattern len:{patt_len}, prev_pattern:{prev_pattern}");
+    //eprintln!("input length:{input_len}, pattern len:{patt_len}, prev_pattern:{prev_pattern}");
     if pattern.is_empty() {
         panic!("!!!!EMPTY MATCH!!??\n");
         //return (true, Some(0), String::new());
@@ -69,14 +69,14 @@ pub fn match_by_char(
     }
 
     while patt_index < patt_len && input_index < input_len {
-        eprintln!(
-            "in loop input:{input_line}, input len:{input_len}, input i:{input_index}, char:{:?}",
-            patt_chars[patt_index]
-        );
-        eprintln!(
-            "in loop, pattern:{pattern}, patt len:{patt_len}, patt i:{patt_index}, char:{:?}",
-            patt_chars[patt_index]
-        );
+        //eprintln!(
+        //     "in loop input:{input_line}, input len:{input_len}, input i:{input_index}, char:{:?}",
+        //     patt_chars[patt_index]
+        // );
+        //eprintln!(
+        //     "in loop, pattern:{pattern}, patt len:{patt_len}, patt i:{patt_index}, char:{:?}",
+        //     patt_chars[patt_index]
+        // );
 
         match patt_chars[patt_index] {
             '[' => {
@@ -94,10 +94,10 @@ pub fn match_by_char(
                         .collect::<String>();
 
                     let mut found_pos = 0;
-                    eprintln!(
-                        "checking char group of length:{char_group_length}, group:{:?}",
-                        lett_group
-                    );
+                    //eprintln!(
+                    //    "checking char group of length:{char_group_length}, group:{:?}",
+                    //    lett_group
+                    //);
 
                     let optional_position = patt_index + char_group_end + 2;
                     let is_optional =
@@ -115,17 +115,17 @@ pub fn match_by_char(
                             })
                         } else {
                             let neg_group = &lett_group[1..];
-                            eprintln!(
-                                "checking negative group:{:?}, input:{input_line}",
-                                neg_group
-                            );
+                            //eprintln!(
+                            //    "checking negative group:{:?}, input:{input_line}",
+                            //    neg_group
+                            //);
                             input_chars[input_index..].iter().enumerate().any(|(i, c)| {
                                 if !neg_group.contains(&c) {
                                     found_pos = i;
-                                    eprintln!("is true");
+                                    //eprintln!("is true");
                                     return true;
                                 } else {
-                                    eprintln!("false");
+                                    //eprintln!("false");
                                     return false;
                                 }
                             })
@@ -146,9 +146,7 @@ pub fn match_by_char(
                         patt_index += 1;
                     }
 
-                    eprintln!(
-                            "opt:{is_optional}, found res:{res}, patt index:{patt_index}, input index:{input_index}"
-                        );
+                    //eprintln!("opt:{is_optional}, res:{res}, patt index:{patt_index}, input index:{input_index}");
                 }
             }
 
@@ -162,10 +160,10 @@ pub fn match_by_char(
 
                 // FIND char class
                 if char_class.chars().nth(1).unwrap().is_digit(10) {
-                    eprintln!(
-                        "\n\n\n FOUND back ref:{char_class}, groups:{:?}\n\n",
-                        patt_capture_groups
-                    );
+                    //eprintln!(
+                    //    "\n\n FOUND back ref:{char_class}, groups:{:?}\n",
+                    //    patt_capture_groups
+                    //);
                     let group_num = char_class[1..].parse::<usize>().unwrap();
                     let actual_group = &patt_capture_groups[group_num - 1].2;
                     let rem_input: String = input_chars[input_index..].iter().collect();
@@ -186,7 +184,7 @@ pub fn match_by_char(
                 }
 
                 prev_pattern = char_class.clone();
-                eprintln!("checking char class {}", char_class);
+                //eprintln!("checking char class {}", char_class);
                 let curr_remaining = &input_line[input_index..];
                 let mut found_pos = 0;
                 let is_optional = patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?';
@@ -210,22 +208,21 @@ pub fn match_by_char(
                 };
 
                 if !res && !is_optional {
-                    eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
+                    //eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
                     let mut next_optional = false;
                     if patt_len - patt_index > 2 {
                         let patt_to_check =
                             &patt_chars[patt_index + 1..].into_iter().collect::<String>();
                         next_optional = check_optional(patt_to_check);
-                        eprintln!(
-                            "Patt to check: {patt_to_check}, checking next with next optional?{}",
-                            next_optional
-                        );
+                        //eprintln!(
+                        //    "Patt to check:{patt_to_check},checking nextoptional?{next_optional}",
+                        //);
                     }
                     if next_optional {
                         input_index += 1;
                         continue;
                     } else {
-                        eprintln!("returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}");
+                        //eprintln!("returning false in char group, curr patter pos:{patt_index}, input pos:{input_index}");
                         return NULL_RETURN;
                     }
                 }
@@ -237,26 +234,24 @@ pub fn match_by_char(
                 if is_optional {
                     patt_index += 1;
                 }
-                eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
+                //eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
             }
 
             '+' => {
-                eprintln!("\n*************\n***********\nREPEATING PATTERN:{prev_pattern}\n\n\n***********");
-
-                let prev_pattern_len = prev_pattern.len();
+                //eprintln!("\n*************\n***********\nREPEATING PATTERN:{prev_pattern}\n\n\n***********");
 
                 //full number of times the prev matched can occur
                 let mut num_repeats = 0;
                 while input_index < input_len {
                     let use_patt = format!("^{prev_pattern}");
                     let use_input = &input_chars[input_index..].iter().collect::<String>();
-                    eprintln!("\n\ncalling repeat,input chars:{:?} input i:{input_index} using input:{:?}, input length{:?}",input_chars, use_input, input_len);
+                    //eprintln!("\n\ncalling repeat,input chars:{:?} input i:{input_index} using input:{:?}, input length{:?}",input_chars, use_input, input_len);
                     let res = match_by_char(&use_input, &use_patt, true, &patt_capture_groups);
                     if !res.0 {
                         break;
                     }
-                    eprintln!("in loop res?:{:?}", res);
-                    eprintln!("in loop input i?:{:?}", input_index);
+                    //eprintln!("in loop res?:{:?}", res);
+                    //eprintln!("in loop input i?:{:?}", input_index);
                     input_index += res.1.unwrap();
                     num_repeats += 1;
                 }
@@ -269,14 +264,14 @@ pub fn match_by_char(
                     &patt_chars,
                     &patt_capture_groups,
                 );
-                eprintln!("\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern},prev_patt:{prev_pattern}, prev_patt_len:{prev_pattern_len}");
+                //eprintln!("\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern},prev_patt:{prev_pattern}, prev_patt_len:{prev_pattern_len}");
 
                 // if there are more of the same immediately after e.g "ca+ats" for "caaaats"
                 // move pattern pointer forward by one
                 // move the input index forward by at least 1
                 // or as many as possible while still satisfying the rest of the pattern
                 patt_index += 1;
-                eprintln!("original input i before subtr similar:{input_index}");
+                //eprintln!("original input i before subtr similar:{input_index}");
                 if similar_remaining_in_pattern > 0 {
                     if input_index >= input_len {
                         input_index += 1
@@ -286,9 +281,9 @@ pub fn match_by_char(
                     } else {
                         input_index -= num_repeats;
                     }
-                    eprintln!("ne input:{input_index}");
+                    //eprintln!("ne input:{input_index}");
                 }
-                eprintln!("AFTER finding all similar: new input i:{input_index}, pattern i:{patt_index}\n");
+                //eprintln!("AFTER finding all similar: new input i:{input_index}, pattern i:{patt_index}\n");
             }
 
             '.' => {
@@ -312,7 +307,7 @@ pub fn match_by_char(
                         }
 
                         if e == &')' {
-                            eprintln!("num opening:{num_opening}");
+                            //eprintln!("num opening:{num_opening}");
                             let num_groups = patt_capture_groups.len();
                             //check for the last position with a zero at .1; means unclosed
                             let zero_pos = patt_capture_groups.iter().rev().position(|e| e.1 == 0);
@@ -332,8 +327,8 @@ pub fn match_by_char(
                         }
                     }
 
-                    eprintln!("\nCAPT GROUPS:{:?}", patt_capture_groups);
-                    eprintln!("waiting positions:{:?}", waiting_groups);
+                    //eprintln!("\nCAPT GROUPS:{:?}", patt_capture_groups);
+                    //eprintln!("waiting positions:{:?}", waiting_groups);
 
                     let start_capt_input = input_index;
                     let closing_bracket_index = patt_index + capture_group_end + 1;
@@ -351,13 +346,13 @@ pub fn match_by_char(
                             &patt_chars,
                             &patt_capture_groups,
                         );
-                        eprintln!("\n\n GROUP SIMILAR in patt:{similar_in_patt}");
+                        //eprintln!("\n\n GROUP SIMILAR in patt:{similar_in_patt}");
                     }
-                    eprintln!("\n input index:{input_index}, patt_index:{patt_index},capt group:{capt_group}");
+                    //eprintln!("\n input index:{input_index}, patt_index:{patt_index},capt group:{capt_group}");
 
                     let group_optional = patt_len > closing_bracket_index
                         && patt_chars[closing_bracket_index] == '?';
-                    eprintln!("GROUP optional?{group_optional}");
+                    //eprintln!("GROUP optional?{group_optional}");
                     let split_char = {
                         if capt_group.contains('(') {
                             '('
@@ -365,20 +360,20 @@ pub fn match_by_char(
                             '|'
                         }
                     };
-                    eprintln!("USING SPLIT CHAR:{split_char}");
+                    //eprintln!("USING SPLIT CHAR:{split_char}");
 
                     let mut matched_input_len = 0;
                     if split_char == '(' {
-                        eprintln!("IN '(' SPLIT");
-                        eprintln!("in layered groups");
+                        //eprintln!("IN '(' SPLIT");
+                        //eprintln!("in layered groups");
                         let split_groups: Vec<_> = capt_group.split(split_char).collect();
                         if !split_groups.iter().all(|e| {
-                            eprintln!("\nmatching SPLIT group:{e}");
+                            //eprintln!("\nmatching SPLIT group:{e}");
 
                             //split by closing brackets to get all subgroups
                             let sub_groups: Vec<_> = e.split_inclusive(')').collect();
                             let res = sub_groups.iter().enumerate().all(|(x, sub_gr)| {
-                                eprintln!("\nmatching SUBGROUP:{sub_gr}");
+                                //eprintln!("\nmatching SUBGROUP:{sub_gr}");
 
                                 //if subgroup is catured
                                 //split inclusive will leave its closing bracket in place
@@ -391,9 +386,9 @@ pub fn match_by_char(
                                 let sub_group_optional =
                                     x + 1 < sub_groups.len() && next_subgroup == "?";
 
-                                eprintln!(
-                                    "SUB optional?{sub_group_optional}, next grp:{next_subgroup}",
-                                );
+                                //eprintln!(
+                                //     "SUB optional?{sub_group_optional}, next grp:{next_subgroup}",
+                                // );
 
                                 //in case of an optional marker or if the split gives an empty str
                                 if sub_gr == &"?" || sub_gr.is_empty() {
@@ -419,56 +414,49 @@ pub fn match_by_char(
                                 );
 
                                 if !sub_group_res.0 {
-                                    eprintln!("\nsub group:{sub_gr} NOT found\n");
+                                    //eprintln!("\nsub group:{sub_gr} NOT found\n");
                                 } else {
-                                    eprintln!(
-                                        "\nsub group:{sub_gr} FOUND, res:{:?}\n",
-                                        sub_group_res
-                                    );
-                                    eprintln!("all groups:{:?}", patt_capture_groups);
+                                    //eprintln!("\nsub group:{sub_gr} FOUND, res:{:?}\n"),sub_group_res);
+                                    //eprintln!("all groups:{:?}", patt_capture_groups);
 
                                     //if captured, use its returned matched input
                                     //in its corresponding group
                                     if is_closer {
                                         let use_pos = waiting_groups.remove(0);
-                                        eprintln!(
-                                            "for patter:{pattern} waiting group pos:{use_pos}"
-                                        );
+                                        //eprintln!("for patter:{pattern} waiting group pos:{use_pos}"));
                                         patt_capture_groups[use_pos].2 = sub_group_res.2;
                                     }
                                 }
 
                                 if sub_group_optional && !sub_group_res.0 {
-                                    eprintln!("\nsubgroup NOT found but OPTIONAL");
+                                    //eprintln!("\nsubgroup NOT found but OPTIONAL");
                                     return true;
                                 }
 
                                 if sub_group_res.0 {
-                                    eprintln!(
-                                        "moving input forward by {}",
-                                        sub_group_res.1.unwrap()
-                                    );
                                     input_index += sub_group_res.1.unwrap();
                                     matched_input_len = sub_group_res.1.unwrap();
                                 }
 
-                                eprintln!("\n\nSUB GROUP:{e}, returning:{}\n\n", sub_group_res.0);
+                                //eprintln!("\n\nSUB GROUP:{e}, returning:{}\n\n", sub_group_res.0);
                                 sub_group_res.0
                             });
-                            eprintln!("\n\nSPLIT GROUP:{e}, returning:{res}\n\n");
+                            //eprintln!("\n\nSPLIT GROUP:{e}, returning:{res}\n\n");
                             res
                         }) {
-                            eprintln!("\n\n'(' SPLIT groups matching false for input:{input_line}, patt:{pattern}\n\n");
-                            return NULL_RETURN;
+                            //eprintln!("\n\n'(' SPLIT groups matching false for input:{input_line}, patt:{pattern}\n\n");
+                            if !group_optional {
+                                return NULL_RETURN;
+                            }
                         }
                     }
                     //if no subgroups split by '|'
                     else {
-                        eprintln!("\n\nIN SECOND SPLIT pattern:{pattern} patt i:{patt_index}\n input:{input_line}, input i:{input_index}\n");
+                        //eprintln!("\n\nIN SECOND SPLIT pattern:{pattern} patt i:{patt_index}\n input:{input_line}, input i:{input_index}\n");
                         let mut split_groups = capt_group.split(split_char);
 
                         if !split_groups.any(|e| {
-                            eprintln!("matching GROUP:{e}");
+                            //eprintln!("matching GROUP:{e}");
                             let res = match_by_char(
                                 &input_line[input_index..],
                                 e,
@@ -478,24 +466,24 @@ pub fn match_by_char(
                             if res.0 {
                                 matched_input_len = res.1.unwrap();
                             }
-                            eprintln!("\n\nGROUP RESULT:{:?}", res);
+                            //eprintln!("\n\nGROUP RESULT:{:?}", res);
                             res.0
                         }) {
-                            eprintln!("\nSECOND SPLIT groups matching false for input:{input_line}, patt:{pattern}\n");
+                            //eprintln!("\nSECOND SPLIT groups matching false for input:{input_line}, patt:{pattern}\n");
                             return NULL_RETURN;
                         }
-                        eprintln!("group return matched len:{matched_input_len}");
+                        //eprintln!("group return matched len:{matched_input_len}");
 
                         input_index += matched_input_len;
-                        eprintln!(
-                            "AFTER MULTIPLE input index:{input_index}, patt_index:{patt_index}"
-                        );
+                        //eprintln!(
+                        //    "AFTER second split input index:{input_index}, patt_index:{patt_index}"
+                        //);
                     }
 
                     //move past capt group
                     patt_index += capt_group.len() + 2;
 
-                    eprintln!("removing similar in capt groups:{similar_in_patt} from input index:{input_index}");
+                    //eprintln!("removing similar in capt groups:{similar_in_patt} from input index:{input_index}");
                     // remove matches that could be matched later in the pattern
                     // in case patter was repeated, and there are similar matched right after
                     // move back n times to make sure the rest of the pattern can be matched
@@ -510,20 +498,20 @@ pub fn match_by_char(
                         input_chars[initial_input_i..input_index].iter().collect();
                     if !match_by_char(&supposed_matched, &capt_group, false, &patt_capture_groups).0
                     {
-                        eprintln!("\n\n\nFAILING supposed match");
-                        eprintln!("supposed:{supposed_matched}, capt:{capt_group}");
+                        //eprintln!("\n\n\nFAILING supposed match");
+                        //eprintln!("supposed:{supposed_matched}, capt:{capt_group}");
                         return NULL_RETURN;
                     }
 
                     let captured_input: String =
                         input_chars[start_capt_input..input_index].iter().collect();
-                    eprintln!("\n\n\nCAPTURED:{captured_input} for pattern:{capt_group}");
+                    //eprintln!("\n\n\nCAPTURED:{captured_input} for pattern:{capt_group}");
 
                     let use_pos = waiting_groups.remove(0);
-                    eprintln!("for patter:{pattern} waiting group pos:{use_pos}");
+                    //eprintln!("for patter:{pattern} waiting group pos:{use_pos}");
                     patt_capture_groups[use_pos].2 = captured_input;
-                    eprintln!("\n\nALL CAPT GROUPS:{:?}", patt_capture_groups);
-                    eprintln!("input:{input_line}, input i:{input_index}\n, pattern:{pattern}, patt i:{patt_index}");
+                    //eprintln!("\n\nALL CAPT GROUPS:{:?}", patt_capture_groups);
+                    //eprintln!("input:{input_line}, input i:{input_index}\n, pattern:{pattern}, patt i:{patt_index}");
                     prev_pattern = capt_group;
                 } else if patt_chars[patt_index] == '('
                     && !patt_chars[patt_index + 1..].contains(&')')
@@ -541,7 +529,7 @@ pub fn match_by_char(
 
                 //false end
                 if patt_chars[patt_index] == '$' && patt_index != patt_len - 1 {
-                    eprintln!("FALSE END");
+                    //eprintln!("FALSE END");
                     return NULL_RETURN;
                 }
 
@@ -555,27 +543,27 @@ pub fn match_by_char(
 
                 //if char is not found but the next part of the pattern is optional
                 if !res && !is_optional {
-                    eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
+                    //eprintln!("NOT FOUND input:{input_line}, pattern:{pattern}");
                     let mut next_optional = false;
                     //if the next part of the pattern is optional
                     if patt_len - patt_index > 2 {
                         let remaining_patt =
                             patt_chars[patt_index + 1..].into_iter().collect::<String>();
                         next_optional = check_optional(&remaining_patt);
-                        eprintln!(
-                            "Patt to check: {remaining_patt}, checking next with next optional?{}",
-                            next_optional
-                        );
+                        //eprintln!(
+                        //    "Patt to check: {remaining_patt}, checking next with next optional?{}",
+                        //    next_optional
+                        //);
                     }
 
                     if next_optional {
                         input_index += 1;
                         continue;
                     } else {
-                        eprintln!(
-                        "returning false in char comp input:{} patt:{} mapping, curr patter pos:{patt_index}, input pos:{input_index}",
-                                input_chars[input_index], patt_chars[patt_index]
-                    );
+                        //eprintln!(
+                        //"returning false in char comp input:{} patt:{} mapping, curr patter pos:{patt_index}, input pos:{input_index}",
+                        //        input_chars[input_index], patt_chars[patt_index]
+                        //    );
                         return NULL_RETURN;
                     }
                 }
@@ -597,7 +585,7 @@ pub fn match_by_char(
     //matches the first pattern
     if starter && input_chars.len() > 1 {
         let next_patt = get_next_pattern(pattern);
-        eprintln!("\n\n\nCHECKING STARTER: next:{next_patt}");
+        //eprintln!("\n\n\nCHECKING STARTER: next:{next_patt}");
 
         if !(match_by_char(
             &input_chars[0..1].iter().collect::<String>(),
@@ -607,7 +595,7 @@ pub fn match_by_char(
         )
         .0)
         {
-            eprintln!("STARTERT false");
+            //eprintln!("STARTERT false");
             return NULL_RETURN;
         }
     }
@@ -617,17 +605,17 @@ pub fn match_by_char(
     // if matching  partial return the length matched
     if full_match_optional && patt_index == pattern.len() {
         let ret_len = input_index;
-        eprintln!(
-            "BEFORE RETURN TRUE full optional:{full_match_optional}; input:{input_line},pattern{:?} returning an input length of:{}",
-            pattern, ret_len
-        );
+        //eprintln!(
+        //    "BEFORE RETURN TRUE full optional:{full_match_optional}; input:{input_line},pattern{:?} returning an input length of:{}",
+        //    pattern, ret_len
+        //);
         let ret = (true, Some(ret_len), matched_input);
-        eprintln!("returning:{:?}", ret);
+        //eprintln!("returning:{:?}", ret);
         return ret;
     }
 
     if patt_index == patt_len && patt_chars.last().unwrap() != &'$' {
-        eprintln!("returning TRUE patt fully parsed input i:{input_index}, input len:{input_len}");
+        //eprintln!("returning TRUE patt fully parsed input i:{input_index}, input len:{input_len}");
         return (true, Some(input_index), matched_input);
     }
 
@@ -638,24 +626,26 @@ pub fn match_by_char(
         //OR pattern is optional/end marker
         //OR the remaining pattern is optional
 
-        eprintln!("INPUT FULLY PARSED full optional:{full_match_optional}");
+        //eprintln!("INPUT FULLY PARSED full optional:{full_match_optional}");
         if full_match_optional {
             return (true, Some(input_len), matched_input);
         }
+
         let res = patt_index >= patt_len
-            || ((patt_index == patt_len - 1) && ['$', '?', '+'].contains(&patt_chars[patt_index]))
+            || ((patt_index == patt_len - 1)
+                && ['$', '?', '+', '*'].contains(&patt_chars[patt_index]))
             || patt_len - patt_index > 1 && {
                 let remaining_patt = patt_chars[patt_index..].into_iter().collect::<String>();
                 check_optional(&remaining_patt)
             };
-        eprintln!("final return: input:{input_line}, i:{input_index}, input len:{input_len}\n  patt len:{patt_len}, pattern:{:#?}, patt i:{patt_index},\nres:{res}", pattern);
+        //eprintln!("final return: input:{input_line}, i:{input_index}, input len:{input_len}\n  patt len:{patt_len}, pattern:{:#?}, patt i:{patt_index},\nres:{res}", pattern);
         return (res, Some(input_len), matched_input);
     };
 
-    eprintln!("\n\n:( RETURNING FALSE");
-    eprintln!(
-        "input:{input_line}, pattern:{pattern}, input pos:{input_index}, patt_pos:{patt_index}"
-    );
-    eprintln!("input len:{input_len}, pattern len:{patt_len}, ");
+    //eprintln!("\n\n:( RETURNING FALSE");
+    //eprintln!(
+    //    "input:{input_line}, pattern:{pattern}, input pos:{input_index}, patt_pos:{patt_index}"
+    //);
+    //eprintln!("input len:{input_len}, pattern len:{patt_len}, ");
     return NULL_RETURN;
 }
