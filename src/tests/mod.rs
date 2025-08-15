@@ -255,3 +255,8 @@ fn failed_4() {
         .0
     );
 }
+
+#[test]
+fn failed_5() {
+    assert!(match_by_char("strawberry", r".*er", false, &Vec::new()).0);
+}

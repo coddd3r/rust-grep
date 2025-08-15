@@ -1,6 +1,6 @@
 use std::usize;
 
-use crate::utils::{check_num_similar_pattern, check_optional, get_next_pattern};
+use crate::utils::{check_num_similar_pattern, check_optional, get_next_pattern, match_extra};
 
 #[cfg(test)]
 mod tests;
@@ -45,6 +45,7 @@ pub fn match_by_char(
     let patt_len = patt_chars.len();
     let input_len = input_chars.len();
     let mut prev_pattern = String::new();
+    let mut prev_skipped = false;
     //queue of capture groups waiting to be assigned
     //a string matched from input
     let mut waiting_groups: Vec<usize> = Vec::new();
@@ -142,7 +143,7 @@ pub fn match_by_char(
                     if is_optional {
                         patt_index += 1;
                     }
-
+                    prev_skipped = is_optional && !res;
                     eprintln!("opt:{is_optional}, res:{res}, patt index:{patt_index}, input index:{input_index}");
                 }
             }
@@ -227,9 +228,10 @@ pub fn match_by_char(
                 if res {
                     input_index += found_pos + 1;
                 }
-                if is_optional {
+                if !res && is_optional {
                     patt_index += 1;
                 }
+                prev_skipped = (!res) && is_optional;
                 eprintln!("found a char in group {char_class}, new pos:{input_index}, new patt pos{patt_index}");
             }
 
@@ -237,48 +239,51 @@ pub fn match_by_char(
                 eprintln!("\n*************\n***********\nREPEATING PATTERN:{prev_pattern}\n\n\n***********");
 
                 //full number of times the prev matched can occur
-                let mut num_repeats = 0;
-                while input_index < input_len {
-                    let use_patt = format!("^{prev_pattern}");
-                    let use_input = &input_chars[input_index..].iter().collect::<String>();
-                    eprintln!("\n\ncalling repeat,input chars:{:?} input i:{input_index} using input:{:?}, input length{:?}",input_chars, use_input, input_len);
-                    let res = match_by_char(&use_input, &use_patt, true, &patt_capture_groups);
-                    if !res.0 {
-                        break;
-                    }
-                    eprintln!("in loop res?:{:?}", res);
-                    eprintln!("in loop input i?:{:?}", input_index);
-                    input_index += res.1.unwrap();
-                    num_repeats += 1;
-                }
-
-                // check how many matches similar to the prev matched
-                // need to occur in the pattern, after repeat
-                let similar_remaining_in_pattern = check_num_similar_pattern(
-                    patt_index,
+                let (found, new_i) = match_extra(
                     &prev_pattern,
-                    &patt_chars,
+                    &input_chars,
+                    input_line,
+                    input_index,
                     &patt_capture_groups,
+                    patt_index,
+                    &patt_chars,
                 );
-                eprintln!("\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern},prev_patt:{prev_pattern}");
-
-                // if there are more of the same immediately after e.g "ca+ats" for "caaaats"
-                // move pattern pointer forward by one
-                // move the input index forward by at least 1
-                // or as many as possible while still satisfying the rest of the pattern
-                patt_index += 1;
-                if similar_remaining_in_pattern > num_repeats {
+                if !found {
                     eprintln!("REMAINING pattern has too many subpatterns");
                     return NULL_RETURN;
                 }
 
-                if similar_remaining_in_pattern > 0 {
-                    input_index -= similar_remaining_in_pattern;
-                    eprintln!("new input index:{input_index}");
-                }
+                input_index = new_i;
+                patt_index += 1;
+                eprintln!("After getting num repeats for '*', new input i:{input_index}");
+
                 eprintln!("AFTER finding all similar: new input i:{input_index}, pattern i:{patt_index}\n");
             }
 
+            '*' => {
+                if prev_skipped {
+                    patt_index += 1;
+                    continue;
+                }
+
+                let (found, new_i) = match_extra(
+                    &prev_pattern,
+                    &input_chars,
+                    input_line,
+                    input_index,
+                    &patt_capture_groups,
+                    patt_index,
+                    &patt_chars,
+                );
+                if !found {
+                    eprintln!("REMAINING pattern has too many subpatterns");
+                    return NULL_RETURN;
+                }
+
+                input_index = new_i;
+                patt_index += 1;
+                eprintln!("After getting num repeats for '*', new input i:{input_index}");
+            }
             '.' => {
                 prev_pattern = ".".to_string();
                 patt_index += 1;
@@ -518,13 +523,6 @@ pub fn match_by_char(
 
             '$' => {
                 patt_index += 1;
-                // eprintln!("found end, input i:{input_index}, input len:{input_len}");
-                // if input_index != input_len {
-                //     eprintln!("FALSE END");
-                //     return NULL_RETURN;
-                // }
-                // eprintln!("RETURNING AT END");
-                // return (true, Some(input_len), input_line.to_string());
             }
 
             _ => {
@@ -565,10 +563,11 @@ pub fn match_by_char(
                             && ['?'].contains(&patt_chars[patt_index + 1]))
                     {
                         input_index += 1;
+                        prev_skipped = true;
                         continue;
                     } else {
                         eprintln!(
-                        "returning false in char comp input:{} patt:{} mapping, curr patter pos:{patt_index}, input pos:{input_index}",
+                        "returning false in char comp input:{:?} patt:{:?} mapping, curr patter pos:{patt_index}, input pos:{input_index}",
                                 input_chars[input_index], patt_chars[patt_index]
                             );
                         return NULL_RETURN;
@@ -582,6 +581,7 @@ pub fn match_by_char(
                 if is_optional {
                     patt_index += 1;
                 }
+                prev_skipped = !(res) && is_optional;
 
                 patt_index += 1;
             }
@@ -621,6 +621,9 @@ pub fn match_by_char(
         return ret;
     }
 
+    if patt_index == patt_len {
+        eprintln!("FULL PATT PARSED");
+    }
     if patt_index == patt_len && patt_chars[patt_len - 1] != '$' {
         eprintln!("returning TRUE patt fully parsed input i:{input_index}, input len:{input_len}");
         return (true, Some(input_index), matched_input);

@@ -4,7 +4,7 @@ pub fn check_optional(pattern: &str) -> bool {
     let mut patt_index: usize = 0;
     let patt_len = pattern.len();
     let patt_chars: Vec<char> = pattern.chars().collect();
-
+    let optional_markers = ['*', '?'];
     match patt_chars[patt_index] {
         '[' => {
             if patt_chars[patt_index + 1..].contains(&']') {
@@ -13,7 +13,8 @@ pub fn check_optional(pattern: &str) -> bool {
                     .position(|c| c == &']')
                     .unwrap();
                 let optional_position = patt_index + char_group_end + 2;
-                optional_position < patt_len && patt_chars[optional_position] == '?'
+                optional_position < patt_len
+                    && optional_markers.contains(&patt_chars[optional_position])
             } else {
                 false
             }
@@ -39,7 +40,8 @@ pub fn check_optional(pattern: &str) -> bool {
                     }
                 }
                 let closing_bracket_index = patt_index + capture_group_end + 1;
-                patt_len > closing_bracket_index && patt_chars[closing_bracket_index] == '?'
+                patt_len > closing_bracket_index
+                    && optional_markers.contains(&patt_chars[closing_bracket_index])
             } else {
                 false
             }
@@ -53,7 +55,7 @@ pub fn check_optional(pattern: &str) -> bool {
                 .into_iter()
                 .collect::<String>();
             eprintln!("checking char class {}", char_class);
-            patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?'
+            patt_index + 2 < patt_len && optional_markers.contains(&patt_chars[patt_index + 2])
         }
 
         _ => {
@@ -62,7 +64,7 @@ pub fn check_optional(pattern: &str) -> bool {
             }
             let opt_position = patt_chars[patt_index + 1];
             eprintln!("opt position:{opt_position}");
-            patt_index + 1 < patt_len && opt_position == '?'
+            patt_index + 1 < patt_len && optional_markers.contains(&opt_position)
         }
     }
 }
@@ -194,4 +196,119 @@ pub fn check_num_similar_pattern(
     }
     eprintln!("RETURNING SIMILAR :{similar_remaining_in_pattern}");
     similar_remaining_in_pattern
+}
+
+pub fn get_numrepeats(
+    input_index: usize,
+    input_line: &str,
+    use_patt: String,
+    input_chars: &Vec<char>,
+    patt_capture_groups: &Vec<(usize, usize, String)>,
+) -> (usize, usize) {
+    let mut num_repeats = 0;
+    let input_len = input_line.len();
+    let mut matched_size = 0;
+    let mut use_i = input_index;
+    while use_i < input_len {
+        let use_input = &input_chars[use_i..].iter().collect::<String>();
+        eprintln!("\n\ncalling repeat,input chars:{:?} input i:{use_i} using input:{:?}, input length{:?}",input_chars, use_input, input_len);
+        let res = match_by_char(&use_input, &use_patt, true, &patt_capture_groups);
+        if !res.0 {
+            break;
+        }
+        eprintln!("in loop res?:{:?}", res);
+        eprintln!("in loop input i?:{:?}", use_i);
+        matched_size += res.1.unwrap();
+        use_i += res.1.unwrap();
+        num_repeats += 1;
+    }
+    (num_repeats, matched_size)
+}
+
+pub fn match_extra(
+    prev_pattern: &str,
+    input_chars: &Vec<char>,
+    input_line: &str,
+    input_index: usize,
+    patt_capture_groups: &Vec<(usize, usize, String)>,
+    patt_index: usize,
+    patt_chars: &Vec<char>,
+) -> (bool, usize) {
+    eprintln!("in MATCH EXTRA");
+    // if there are more of the same immediately after e.g "ca+ats" for "caaaats"
+    // move pattern pointer forward by one
+    // move the input index forward by at least 1
+    // or as many as possible while still satisfying the rest of the pattern
+    let mut use_i = input_index;
+    //full number of times the prev matched can occur
+    let use_patt = format!("^{prev_pattern}");
+    // eprintln!(
+    //     "in getting extra matches input:{input_line}, input len:{}, input i:{input_index}, char:{:?}",
+    //     input_line.len(),
+    //     input_chars[input_index]
+    // );
+    // eprintln!(
+    //     "in getting extra matches, prevpattern:{use_patt}, patt len:{}, patt i:{patt_index}, char:{:?}",
+    //     use_patt.len(),
+    //     patt_chars[patt_index]
+    // );
+
+    // // check how many matches similar to the prev matched
+    // // need to occur in the pattern, after repeat
+    // let similar_remaining_in_pattern =
+    //     check_num_similar_pattern(patt_index, &prev_pattern, &patt_chars, &patt_capture_groups);
+    // eprintln!(
+    //     "\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern},prev_patt:{prev_pattern}"
+    // );
+    // if similar_remaining_in_pattern > num_repeats {
+    //     return (false, 0);
+    // }
+
+    let input_len = input_chars.len();
+    let rem_patt: String = patt_chars[patt_index + 1..].iter().collect();
+
+    //if it ends after ths repeat
+    //make sure patt matches to end
+    if rem_patt.len() == 1 && &rem_patt == "$" || rem_patt.is_empty() {
+        eprintln!("checking END OR LAST patt");
+        let (_num_repeats, matched_size) = get_numrepeats(
+            use_i,
+            input_line,
+            use_patt,
+            &input_chars,
+            &patt_capture_groups,
+        );
+        use_i += matched_size;
+        let res = {
+            if &rem_patt == "$" {
+                return (use_i == input_len, use_i);
+            } else {
+                eprintln!("remaining patt is empty");
+                (true, use_i)
+            }
+        };
+        eprintln!("RETURNING FROM EXTRA CHECKER:{res:?}\n");
+        eprintln!("check index:{use_i}, input i:{input_index}");
+        return res;
+    }
+    let mut check_index = input_len - 1;
+    while check_index > input_index {
+        eprintln!("in match extra while");
+        let curr_input: String = input_chars[check_index..].iter().collect();
+        if match_by_char(&curr_input, &rem_patt, false, patt_capture_groups).0 {
+            break;
+        }
+        check_index -= 1;
+    }
+    eprintln!("FOUND PATT AT INDEX:{check_index}");
+
+    //
+    //    if similar_remaining_in_pattern > 0 {
+    //        use_i -= similar_remaining_in_pattern;
+    //        eprintln!("new input index:{use_i}");
+    //    }
+    eprintln!("check index:{check_index}, input i:{input_index}");
+    let res = (check_index >= input_index, check_index);
+    eprintln!("RETURNING FROM EXTRA CHECKER:{res:?}\n");
+    res
 }
