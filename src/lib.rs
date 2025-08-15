@@ -57,8 +57,8 @@ pub fn match_by_char(
     }
 
     if input_line.is_empty() {
-        panic!("!!!!EMPTY INPUT!!??\n");
-        //return NULL_RETURN;
+        eprintln!("!!!!EMPTY INPUT!!??\n");
+        return NULL_RETURN;
         //return (true, Some(0), String::new());
     }
 
@@ -211,10 +211,8 @@ pub fn match_by_char(
                         let patt_to_check =
                             &patt_chars[patt_index + 1..].into_iter().collect::<String>();
                         next_optional = check_optional(patt_to_check);
-                        eprintln!(
-                            "Patt to check:{patt_to_check});
-                eprintln!( checking next optional?{next_optional}"
-                        );
+                        eprintln!("Patt to check:{patt_to_check});");
+                        eprintln!("checking next optional?{next_optional}");
                     }
                     if next_optional {
                         input_index += 1;
@@ -564,7 +562,7 @@ pub fn match_by_char(
 
                     if next_optional
                         || (patt_index + 1 < patt_len
-                            && ['?', '+', '$'].contains(&patt_chars[patt_index + 1]))
+                            && ['?'].contains(&patt_chars[patt_index + 1]))
                     {
                         input_index += 1;
                         continue;

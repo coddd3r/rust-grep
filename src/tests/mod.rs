@@ -242,3 +242,16 @@ fn failed_3() {
         .0
     );
 }
+
+#[test]
+fn failed_4() {
+    assert!(
+        !match_by_char(
+            "'hody hey there' is made up of 'hody' and 'hey'. hody hey there",
+            r"'((how+dy) (he?y) there)' is made up of '\2' and '\3'. \1",
+            false,
+            &Vec::new()
+        )
+        .0
+    );
+}
