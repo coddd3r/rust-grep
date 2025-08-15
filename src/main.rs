@@ -17,16 +17,31 @@ fn main() {
         process::exit(1);
     }
 
+    let mut recursion_found = false;
+    let mut pat_pos = 1;
+    let mut check_args = env::args().into_iter();
+    while let Some(s) = check_args.next() {
+        if &s == "-E" {
+            pat_pos += 1;
+        }
+
+        if &s == "-r" {
+            recursion_found = true;
+            pat_pos += 1;
+        }
+    }
+
     let mut res = false;
-    let pattern = env::args().nth(2).unwrap();
+    let pattern = env::args().nth(pat_pos).unwrap();
+    eprintln!("pattern position:{pat_pos}, pattern:{pattern}");
 
     if len_args > 3 {
         eprintln!("file args");
         let multiple_files = len_args > 4;
 
         let mut all_paths: Vec<PathBuf> = Vec::new();
-        if env::args().any(|a| &a == "-r") {
-            let z = env::args().nth(4).unwrap();
+        if recursion_found {
+            let z = env::args().nth(pat_pos + 1).unwrap();
             let first_path = Path::new(&z);
             eprintln!("firs path:{:?}", first_path);
             if first_path.metadata().unwrap().is_dir() {
