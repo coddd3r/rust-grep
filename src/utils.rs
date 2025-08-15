@@ -315,7 +315,7 @@ pub fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str) -> bool {
                 let curr_res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
                 if curr_res {
                     if multiple_files {
-                        print!("{:?}:", f);
+                        print!("{}:", f.to_str().unwrap());
                     }
                     println!("{input_line}");
                 }
