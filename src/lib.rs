@@ -527,6 +527,7 @@ pub fn match_by_char(
                 eprintln!("RETURNING AT END");
                 return (true, Some(input_len), input_line.to_string());
             }
+
             _ => {
                 if ['?'].contains(&patt_chars[patt_index]) {
                     patt_index += 1;

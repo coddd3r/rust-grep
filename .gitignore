@@ -12,3 +12,5 @@ target/
 pusher*
 fruits*
 *.txt
+
+examples.sh

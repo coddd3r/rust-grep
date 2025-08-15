@@ -21,13 +21,14 @@ fn main() {
     let pattern = env::args().nth(2).unwrap();
 
     if len_args > 3 {
-        for _ in 0..3 {
-            let _ = all_args.next();
-        }
+        eprintln!("file args");
+        let multiple_lines = len_args > 4;
+        let _ = all_args.nth(2); //consume first 3
 
-        while let Some(input_file) = &all_args.next() {
-            eprintln!("\n\n=====checking file:{input_file}=======");
-            let input_file = std::env::current_dir().unwrap().join(&input_file);
+        eprintln!("nefore while all args:{:?}", all_args);
+        while let Some(f) = &all_args.next() {
+            eprintln!("\n\n=====checking file:{f}=======");
+            let input_file = std::env::current_dir().unwrap().join(&f);
             if input_file.exists() {
                 let file = File::open(input_file).unwrap();
                 let reader = BufReader::new(file);
@@ -37,6 +38,9 @@ fn main() {
                         eprintln!("\n~~~~~~for line:{input_line}");
                         let curr_res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
                         if curr_res {
+                            if multiple_lines {
+                                print!("{f}:");
+                            }
                             println!("{input_line}");
                         }
                         res = res || curr_res;
@@ -51,7 +55,7 @@ fn main() {
     }
 
     if res {
-        eprintln!("SUCCESS");
+        eprintln!("SUCCESS!!!");
         process::exit(0)
     } else {
         eprintln!("FAILED");
