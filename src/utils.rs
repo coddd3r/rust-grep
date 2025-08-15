@@ -18,6 +18,33 @@ pub fn check_optional(pattern: &str) -> bool {
                 false
             }
         }
+
+        '(' => {
+            if patt_chars[patt_index + 1..].contains(&')') {
+                let mut num_opening: usize = 1;
+                let mut capture_group_end = 0;
+                let rem_chars = &patt_chars[patt_index + 1..];
+                for (i, e) in rem_chars.iter().enumerate() {
+                    if e == &'(' {
+                        num_opening += 1;
+                    }
+
+                    if e == &')' && num_opening == 1 {
+                        capture_group_end = i;
+                        break;
+                    }
+
+                    if e == &')' && num_opening > 1 {
+                        num_opening -= 1;
+                    }
+                }
+                let closing_bracket_index = patt_index + capture_group_end + 1;
+                patt_len > closing_bracket_index && patt_chars[closing_bracket_index] == '?'
+            } else {
+                false
+            }
+        }
+
         '\\' => {
             while &patt_chars[patt_index + 1] == &'\\' {
                 patt_index += 1;
@@ -28,6 +55,7 @@ pub fn check_optional(pattern: &str) -> bool {
             eprintln!("checking char class {}", char_class);
             patt_index + 2 < patt_len && patt_chars[patt_index + 2] == '?'
         }
+
         _ => {
             if ['?'].contains(&patt_chars[patt_index]) {
                 patt_index += 1;
@@ -53,6 +81,7 @@ pub fn get_next_pattern(pattern: &str) -> String {
                     .unwrap();
                 return pattern[patt_index..patt_index + char_group_end + 2].to_string();
             }
+
             '\\' => {
                 while (patt_index + 1) < patt_len
                     && &pattern[patt_index + 1..patt_index + 2] == r"\"
@@ -61,6 +90,7 @@ pub fn get_next_pattern(pattern: &str) -> String {
                 }
                 return pattern[patt_index..patt_index + 2].to_string();
             }
+
             '(' => {
                 if patt_chars[patt_index + 1..].contains(&')') {
                     let mut num_opening: usize = 1;
@@ -68,6 +98,7 @@ pub fn get_next_pattern(pattern: &str) -> String {
                     let mut first_start = patt_index;
                     let mut first_end = 0;
                     eprintln!("before group loop, patt i:{patt_index}");
+                    //next pattern will be the first closed group
                     for (i, e) in rem_chars.iter().enumerate() {
                         if e == &'(' {
                             num_opening += 1;
@@ -78,7 +109,6 @@ pub fn get_next_pattern(pattern: &str) -> String {
                             eprintln!("num opening:{num_opening}");
                             first_end = patt_index + 1 + i;
                             break;
-                            //patt_capture_groups[num_opening - 1].1 = patt_index + 1 + i;
                         }
                     }
 
@@ -91,7 +121,9 @@ pub fn get_next_pattern(pattern: &str) -> String {
                     return capt_group;
                 }
             }
+
             '^' | '+' | ']' | ')' => patt_index += 1,
+
             _ => return pattern[patt_index..patt_index + 1].to_string(),
         }
     }
@@ -117,7 +149,7 @@ pub fn check_num_similar_pattern(
         let prev_pattern_len = prev_pattern.len();
         eprintln!("\nchecking repeat with next pattern:{next_pattern}");
 
-        //TODO: handle checking repeats in capture groups
+        // handle checking repeats in capture groups
         if next_pattern.chars().nth(0).unwrap() == '\\' {
             eprintln!("\n\n\n\n\n\n****SIMILAR CAPTURE: with capt:{next_pattern}");
             let capt_gr_num = next_pattern.chars().nth(1).unwrap().to_digit(10).unwrap();
