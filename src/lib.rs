@@ -4,7 +4,7 @@ use crate::utils::{check_num_similar_pattern, check_optional, get_next_pattern, 
 
 #[cfg(test)]
 mod tests;
-mod utils;
+pub mod utils;
 
 const NULL_RETURN: (bool, Option<usize>, String) = (false, None, String::new());
 
@@ -255,9 +255,7 @@ pub fn match_by_char(
 
                 input_index = new_i;
                 patt_index += 1;
-                eprintln!("After getting num repeats for '*', new input i:{input_index}");
-
-                eprintln!("AFTER finding all similar: new input i:{input_index}, pattern i:{patt_index}\n");
+                eprintln!("After getting num repeats for '+', new input i:{input_index}");
             }
 
             '*' => {
@@ -284,6 +282,7 @@ pub fn match_by_char(
                 patt_index += 1;
                 eprintln!("After getting num repeats for '*', new input i:{input_index}");
             }
+
             '.' => {
                 prev_pattern = ".".to_string();
                 patt_index += 1;

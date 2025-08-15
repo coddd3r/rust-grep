@@ -1,11 +1,10 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::io::{self, BufRead};
+use std::env;
+use std::io::{self};
 use std::path::{Path, PathBuf};
 use std::process;
-use std::{env, fs};
 
 use codecrafters_grep::match_by_char;
+use codecrafters_grep::utils::{get_paths, parse_file};
 
 fn main() {
     eprintln!("Logs from your program will appear here!");
@@ -60,48 +59,4 @@ fn main() {
         eprintln!("FAILED");
         process::exit(1)
     }
-}
-
-fn get_paths(dir: PathBuf) -> Vec<PathBuf> {
-    let mut all_paths: Vec<PathBuf> = Vec::new();
-
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir).unwrap() {
-            if let Ok(ent) = entry {
-                let path = ent.path();
-                if path.is_dir() {
-                    all_paths.extend(get_paths(path));
-                } else {
-                    all_paths.push(path);
-                }
-            }
-        }
-    }
-
-    all_paths
-}
-
-fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str) -> bool {
-    let mut res = false;
-    let input_file = &f;
-    if input_file.exists() {
-        let file = File::open(input_file).unwrap();
-        let reader = BufReader::new(file);
-
-        reader.lines().for_each(|l| {
-            if let Ok(input_line) = l {
-                eprintln!("\n~~~~~~for line:{input_line}");
-                let curr_res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
-                if curr_res {
-                    if multiple_files {
-                        print!("{:?}:", f);
-                    }
-                    println!("{input_line}");
-                }
-                res = res || curr_res;
-            }
-        });
-    }
-    println!("for file:{f:?} returning:{res}");
-    res
 }

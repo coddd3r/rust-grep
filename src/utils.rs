@@ -1,3 +1,6 @@
+use std::io::BufRead;
+use std::{fs::File, io::BufReader, path::PathBuf};
+
 use crate::match_by_char;
 
 pub fn check_optional(pattern: &str) -> bool {
@@ -242,33 +245,12 @@ pub fn match_extra(
     let mut use_i = input_index;
     //full number of times the prev matched can occur
     let use_patt = format!("^{prev_pattern}");
-    // eprintln!(
-    //     "in getting extra matches input:{input_line}, input len:{}, input i:{input_index}, char:{:?}",
-    //     input_line.len(),
-    //     input_chars[input_index]
-    // );
-    // eprintln!(
-    //     "in getting extra matches, prevpattern:{use_patt}, patt len:{}, patt i:{patt_index}, char:{:?}",
-    //     use_patt.len(),
-    //     patt_chars[patt_index]
-    // );
-
-    // // check how many matches similar to the prev matched
-    // // need to occur in the pattern, after repeat
-    // let similar_remaining_in_pattern =
-    //     check_num_similar_pattern(patt_index, &prev_pattern, &patt_chars, &patt_capture_groups);
-    // eprintln!(
-    //     "\n\nrpts:{num_repeats}, simi:{similar_remaining_in_pattern},prev_patt:{prev_pattern}"
-    // );
-    // if similar_remaining_in_pattern > num_repeats {
-    //     return (false, 0);
-    // }
-
     let input_len = input_chars.len();
     let rem_patt: String = patt_chars[patt_index + 1..].iter().collect();
 
     //if it ends after ths repeat
     //make sure patt matches to end
+    //if patt has free reight, match as much as possible
     if rem_patt.len() == 1 && &rem_patt == "$" || rem_patt.is_empty() {
         eprintln!("checking END OR LAST patt");
         let (_num_repeats, matched_size) = get_numrepeats(
@@ -279,16 +261,8 @@ pub fn match_extra(
             &patt_capture_groups,
         );
         use_i += matched_size;
-        let res = {
-            if &rem_patt == "$" {
-                return (use_i == input_len, use_i);
-            } else {
-                eprintln!("remaining patt is empty");
-                (true, use_i)
-            }
-        };
+        let res = (rem_patt.is_empty() || use_i == input_len, use_i);
         eprintln!("RETURNING FROM EXTRA CHECKER:{res:?}\n");
-        eprintln!("check index:{use_i}, input i:{input_index}");
         return res;
     }
     let mut check_index = input_len - 1;
@@ -301,14 +275,52 @@ pub fn match_extra(
         check_index -= 1;
     }
     eprintln!("FOUND PATT AT INDEX:{check_index}");
-
-    //
-    //    if similar_remaining_in_pattern > 0 {
-    //        use_i -= similar_remaining_in_pattern;
-    //        eprintln!("new input index:{use_i}");
-    //    }
-    eprintln!("check index:{check_index}, input i:{input_index}");
+    eprintln!("input i:{input_index}");
     let res = (check_index >= input_index, check_index);
     eprintln!("RETURNING FROM EXTRA CHECKER:{res:?}\n");
+    res
+}
+
+pub fn get_paths(dir: PathBuf) -> Vec<PathBuf> {
+    let mut all_paths: Vec<PathBuf> = Vec::new();
+
+    if dir.is_dir() {
+        for entry in std::fs::read_dir(dir).unwrap() {
+            if let Ok(ent) = entry {
+                let path = ent.path();
+                if path.is_dir() {
+                    all_paths.extend(get_paths(path));
+                } else {
+                    all_paths.push(path);
+                }
+            }
+        }
+    }
+
+    all_paths
+}
+
+pub fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str) -> bool {
+    let mut res = false;
+    let input_file = &f;
+    if input_file.exists() {
+        let file = File::open(input_file).unwrap();
+        let reader = BufReader::new(file);
+
+        reader.lines().for_each(|l| {
+            if let Ok(input_line) = l {
+                eprintln!("\n~~~~~~for line:{input_line}");
+                let curr_res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
+                if curr_res {
+                    if multiple_files {
+                        print!("{:?}:", f);
+                    }
+                    println!("{input_line}");
+                }
+                res = res || curr_res;
+            }
+        });
+    }
+    println!("for file:{f:?} returning:{res}");
     res
 }
