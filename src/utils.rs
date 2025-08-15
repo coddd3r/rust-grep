@@ -304,11 +304,13 @@ pub fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str) -> bool {
     let mut res = false;
     let input_file = &f;
     if input_file.exists() {
+        //println!("checking file:{input_file:?}");
         let file = File::open(input_file).unwrap();
         let reader = BufReader::new(file);
 
         reader.lines().for_each(|l| {
             if let Ok(input_line) = l {
+                //println!("checking line:{input_line}");
                 eprintln!("\n~~~~~~for line:{input_line}");
                 let curr_res = match_by_char(&input_line, &pattern, false, &Vec::new()).0;
                 if curr_res {
@@ -321,6 +323,5 @@ pub fn parse_file(f: &PathBuf, multiple_files: bool, pattern: &str) -> bool {
             }
         });
     }
-    println!("for file:{f:?} returning:{res}");
     res
 }

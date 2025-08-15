@@ -59,7 +59,7 @@ fn main() {
 
         all_paths
             .iter()
-            .for_each(|p| res = res || parse_file(p, multiple_files, &pattern));
+            .for_each(|p| res = parse_file(p, multiple_files, &pattern) || res);
         eprintln!("ALL FILES:{all_paths:?}")
     } else {
         let mut input_line = String::new();
