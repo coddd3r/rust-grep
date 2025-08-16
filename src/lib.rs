@@ -624,9 +624,12 @@ pub fn match_by_char(
         return ret;
     }
 
-    if patt_index == patt_len {
-        eprintln!("FULL PATT PARSED");
+    //if last is an end character '$' and input is not fully parsed, false
+    if patt_index == patt_len && patt_chars[patt_len - 1] == '$' && input_len != input_index {
+        //return (true, Some(input_index), matched_input);
+        return NULL_RETURN;
     }
+
     if patt_index == patt_len && patt_chars[patt_len - 1] != '$' {
         eprintln!("returning TRUE patt fully parsed input i:{input_index}, input len:{input_len}");
         return (true, Some(input_index), matched_input);
@@ -660,8 +663,9 @@ pub fn match_by_char(
         return (res, Some(input_len), matched_input);
     };
 
-    eprintln!("\n\n:( RETURNING FALSE");
+    eprintln!("\n\n:( RETURNING PANIC ALL CONDITIONS FAILED");
     eprintln!("input:{input_line}, pattern:{pattern},input i:{input_index},patt_i:{patt_index}");
     eprintln!("input len:{input_len}, pattern len:{patt_len}, ");
-    return NULL_RETURN;
+    panic!();
+    //return NULL_RETURN;
 }

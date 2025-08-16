@@ -260,9 +260,9 @@ pub fn match_extra(
     );
 
     eprintln!("\n\n\npattern has been repeated:{num_repeats}");
-    //if it ends after ths repeat
-    //make sure patt matches to end
-    //if patt has free reight, match as much as possible
+    // if it ends after ths repeat
+    // make sure patt matches to end
+    // i.e if patt has free reign, repeat as much as possible
     if rem_patt.len() == 1 && &rem_patt == "$" || rem_patt.is_empty() {
         eprintln!("checking END OR LAST patt");
         use_i += matched_size;
