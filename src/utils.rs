@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::io::BufRead;
 use std::{fs::File, io::BufReader, path::PathBuf};
 
@@ -247,24 +248,29 @@ pub fn match_extra(
     let use_patt = format!("^{prev_pattern}");
     let input_len = input_chars.len();
     let rem_patt: String = patt_chars[patt_index + 1..].iter().collect();
+    eprintln!("input i:{input_index}, len:{input_len}, input:{input_line:?}");
+    eprintln!("pattern:{use_patt}, remaining patter to check the minimum match for:{rem_patt:?}");
 
+    let (num_repeats, matched_size) = get_numrepeats(
+        use_i,
+        input_line,
+        use_patt,
+        &input_chars,
+        &patt_capture_groups,
+    );
+
+    eprintln!("\n\n\npattern has been repeated:{num_repeats}");
     //if it ends after ths repeat
     //make sure patt matches to end
     //if patt has free reight, match as much as possible
     if rem_patt.len() == 1 && &rem_patt == "$" || rem_patt.is_empty() {
         eprintln!("checking END OR LAST patt");
-        let (_num_repeats, matched_size) = get_numrepeats(
-            use_i,
-            input_line,
-            use_patt,
-            &input_chars,
-            &patt_capture_groups,
-        );
         use_i += matched_size;
         let res = (rem_patt.is_empty() || use_i == input_len, use_i);
         eprintln!("RETURNING FROM EXTRA CHECKER:{res:?}\n");
         return res;
     }
+
     let mut check_index = input_len - 1;
     while check_index > input_index {
         eprintln!("in match extra while");
@@ -274,9 +280,17 @@ pub fn match_extra(
         }
         check_index -= 1;
     }
+
     eprintln!("FOUND PATT AT INDEX:{check_index}");
     eprintln!("input i:{input_index}");
-    let res = (check_index >= input_index, check_index);
+    //remaining input should be able to match the remaining pattern
+    //return the min of the number of times patt is repeated and
+    //the furthest index the number can repeat to
+    //while still matching the remaining pattern
+    let res = (
+        check_index >= input_index,
+        min(check_index, input_index + num_repeats),
+    );
     eprintln!("RETURNING FROM EXTRA CHECKER:{res:?}\n");
     res
 }

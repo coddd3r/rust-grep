@@ -365,7 +365,11 @@ pub fn match_by_char(
                         eprintln!("in layered groups");
                         let split_groups: Vec<_> = capt_group.split(split_char).collect();
                         if !split_groups.iter().all(|e| {
-                            eprintln!("\nmatching SPLIT group:{e}");
+                            eprintln!("\nmatching SPLIT group:{e:?}");
+                            if e.is_empty() {
+                                eprintln!("empty split, returning true");
+                                return true;
+                            }
 
                             //split by closing brackets to get all subgroups
                             let sub_groups: Vec<_> = e.split_inclusive(')').collect();
@@ -384,7 +388,7 @@ pub fn match_by_char(
                                     x + 1 < sub_groups.len() && next_subgroup == "?";
 
                                 eprintln!("SUB optional?{sub_group_optional}");
-                                eprintln!("next grp:{next_subgroup}");
+                                eprintln!("next grp:{next_subgroup:?}");
 
                                 //in case of an optional marker or if the split gives an empty str
                                 if sub_gr == &"?" || sub_gr.is_empty() {

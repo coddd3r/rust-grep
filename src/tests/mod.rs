@@ -260,3 +260,16 @@ fn failed_4() {
 fn failed_5() {
     assert!(match_by_char("strawberry", r".*er", false, &Vec::new()).0);
 }
+
+#[test]
+fn failed_test6() {
+    assert!(
+        match_by_char(
+            "'howwdy hey there' is made up of 'howwdy' and 'hey'. howwdy hey there",
+            "'((how+dy) (he?y) there)' is made up of '\\2' and '\\3'. \\1",
+            false,
+            &Vec::new()
+        )
+        .0
+    );
+}
